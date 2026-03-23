@@ -25,9 +25,7 @@ export async function POST(req: NextRequest) {
   const existing = await sql`SELECT file_pathname FROM submissions WHERE project_id = ${session.projectId}`
   if (existing.length && existing[0].file_pathname) {
     try {
-      const { del: blobDel } = await import('@vercel/blob')
-      // Get blob URL from pathname - construct it
-      await blobDel(existing[0].file_pathname)
+      await del(existing[0].file_pathname)
     } catch {
       // ignore deletion errors
     }

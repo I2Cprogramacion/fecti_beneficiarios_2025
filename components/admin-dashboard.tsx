@@ -1,0 +1,356 @@
+'use client'
+
+import { useState, useRef, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+
+interface Project {
+  id: number
+  clave: string
+  titulo: string
+  assigned_email: string | null
+  file_name: string | null
+  uploaded_at: string | null
+  submitted: boolean
+}
+
+interface AdminDashboardProps {
+  projects: Project[]
+  templatePathname: string | null
+  totalSubmitted: number
+  adminEmail: string
+}
+
+export function AdminDashboard({
+  projects,
+  templatePathname,
+  totalSubmitted,
+  adminEmail,
+}: AdminDashboardProps) {
+  const router = useRouter()
+  const [, startTransition] = useTransition()
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<'all' | 'submitted' | 'pending'>('all')
+
+  // Template upload
+  const templateRef = useRef<HTMLInputElement>(null)
+  const [templateLoading, setTemplateLoading] = useState(false)
+  const [templateMsg, setTemplateMsg] = useState('')
+
+  // User assignment modal
+  const [assignModal, setAssignModal] = useState<Project | null>(null)
+  const [assignEmail, setAssignEmail] = useState('')
+  const [assignPassword, setAssignPassword] = useState('')
+  const [assignError, setAssignError] = useState('')
+  const [assignLoading, setAssignLoading] = useState(false)
+
+  async function handleLogout() {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    router.push('/admin')
+    router.refresh()
+  }
+
+  async function handleTemplateUpload(file: File) {
+    setTemplateMsg('')
+    setTemplateLoading(true)
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await fetch('/api/admin/template', { method: 'POST', body: fd })
+    const data = await res.json()
+    setTemplateLoading(false)
+    setTemplateMsg(res.ok ? `Plantilla "${data.fileName}" cargada correctamente.` : (data.error || 'Error al cargar.'))
+    if (res.ok) startTransition(() => router.refresh())
+  }
+
+  function openAssignModal(project: Project) {
+    setAssignModal(project)
+    setAssignEmail(project.assigned_email ?? '')
+    setAssignPassword('')
+    setAssignError('')
+  }
+
+  async function handleAssignSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!assignModal) return
+    setAssignError('')
+    setAssignLoading(true)
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: assignEmail, password: assignPassword, projectId: assignModal.id }),
+    })
+    const data = await res.json()
+    setAssignLoading(false)
+    if (!res.ok) { setAssignError(data.error || 'Error.'); return }
+    setAssignModal(null)
+    startTransition(() => router.refresh())
+  }
+
+  const filtered = projects.filter((p) => {
+    const matchSearch =
+      p.clave.toLowerCase().includes(search.toLowerCase()) ||
+      p.titulo.toLowerCase().includes(search.toLowerCase()) ||
+      (p.assigned_email ?? '').toLowerCase().includes(search.toLowerCase())
+    const matchFilter =
+      filter === 'all' ||
+      (filter === 'submitted' && p.submitted) ||
+      (filter === 'pending' && !p.submitted)
+    return matchSearch && matchFilter
+  })
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background font-sans">
+      {/* Header */}
+      <header className="bg-primary text-primary-foreground shadow-md">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-accent flex items-center justify-center text-xs font-bold text-white">F</div>
+            <div>
+              <p className="text-sm font-semibold leading-tight">FECTI – Administrador</p>
+              <p className="text-xs opacity-70 hidden sm:block">{adminEmail}</p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="bg-accent hover:bg-accent/90 text-white text-xs px-3 py-1.5 rounded transition-colors"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-1">
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+          <StatCard value={projects.length} label="Proyectos totales" dark />
+          <StatCard value={totalSubmitted} label="Archivos subidos" accent />
+          <StatCard value={projects.length - totalSubmitted} label="Pendientes" />
+          <StatCard
+            value={`${Math.round((totalSubmitted / projects.length) * 100)}%`}
+            label="Completado"
+          />
+        </div>
+
+        {/* Template management */}
+        <div className="bg-card border border-border rounded-lg p-5 mb-6 shadow-sm">
+          <h2 className="text-sm font-semibold text-foreground mb-1">Plantilla Excel</h2>
+          <p className="text-xs text-muted-foreground mb-3">
+            {templatePathname
+              ? 'Hay una plantilla activa. Puedes reemplazarla subiendo un nuevo archivo.'
+              : 'Aún no hay plantilla. Sube un archivo .xls o .xlsx para que los beneficiarios puedan descargarlo.'}
+          </p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={() => templateRef.current?.click()}
+              disabled={templateLoading}
+              className="bg-primary text-primary-foreground text-xs font-medium px-4 py-2 rounded hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              {templateLoading ? 'Subiendo...' : templatePathname ? 'Reemplazar plantilla' : 'Subir plantilla'}
+            </button>
+            {templatePathname && (
+              <a
+                href="/api/template"
+                className="text-xs text-accent hover:underline"
+                target="_blank"
+              >
+                Descargar actual
+              </a>
+            )}
+            <input
+              ref={templateRef}
+              type="file"
+              accept=".xls,.xlsx"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleTemplateUpload(f) }}
+            />
+          </div>
+          {templateMsg && (
+            <p className={`text-xs mt-2 ${templateMsg.includes('correctamente') ? 'text-green-700' : 'text-destructive'}`}>
+              {templateMsg}
+            </p>
+          )}
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por clave, título o correo..."
+            className="flex-1 border border-input rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <div className="flex gap-2">
+            {(['all', 'submitted', 'pending'] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`text-xs px-3 py-2 rounded transition-colors font-medium ${
+                  filter === f
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                }`}
+              >
+                {f === 'all' ? 'Todos' : f === 'submitted' ? 'Subidos' : 'Pendientes'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-secondary border-b border-border">
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Clave</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Título</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden md:table-cell">Correo asignado</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Estatus</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden lg:table-cell">Archivo</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden lg:table-cell">Fecha</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((p, i) => (
+                  <tr key={p.id} className={`border-b border-border last:border-0 ${i % 2 === 0 ? '' : 'bg-secondary/30'}`}>
+                    <td className="px-4 py-3 font-mono text-xs text-accent font-semibold whitespace-nowrap">{p.clave}</td>
+                    <td className="px-4 py-3 text-xs text-foreground max-w-xs">
+                      <span className="line-clamp-2">{p.titulo}</span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">
+                      {p.assigned_email ?? <span className="italic opacity-50">Sin asignar</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          p.submitted ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                        }`}
+                      >
+                        {p.submitted ? 'Subido' : 'Pendiente'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell max-w-[160px]">
+                      <span className="truncate block">{p.file_name ?? '—'}</span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell whitespace-nowrap">
+                      {p.uploaded_at
+                        ? new Date(p.uploaded_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : '—'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => openAssignModal(p)}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Asignar
+                        </button>
+                        {p.submitted && (
+                          <a
+                            href={`/api/admin/download?projectId=${p.id}`}
+                            className="text-xs text-accent hover:underline"
+                          >
+                            Descargar
+                          </a>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filtered.length === 0 && (
+              <div className="py-12 text-center text-sm text-muted-foreground">
+                No se encontraron proyectos.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <p className="text-xs text-muted-foreground mt-3">
+          Mostrando {filtered.length} de {projects.length} proyectos
+        </p>
+      </main>
+
+      {/* Assign Modal */}
+      {assignModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-card border border-border rounded-lg shadow-xl w-full max-w-sm p-6">
+            <h3 className="text-sm font-semibold text-foreground mb-1">Asignar acceso</h3>
+            <p className="text-xs text-muted-foreground mb-4 text-pretty">
+              <span className="font-mono text-accent">{assignModal.clave}</span> — {assignModal.titulo}
+            </p>
+            <form onSubmit={handleAssignSubmit} className="flex flex-col gap-3">
+              <div>
+                <label className="text-xs font-medium text-foreground block mb-1">Correo electrónico</label>
+                <input
+                  type="email"
+                  value={assignEmail}
+                  onChange={(e) => setAssignEmail(e.target.value)}
+                  required
+                  className="w-full border border-input rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="beneficiario@ejemplo.com"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-foreground block mb-1">Contraseña</label>
+                <input
+                  type="text"
+                  value={assignPassword}
+                  onChange={(e) => setAssignPassword(e.target.value)}
+                  required
+                  className="w-full border border-input rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Contraseña para el beneficiario"
+                />
+              </div>
+              {assignError && (
+                <p className="text-xs text-destructive bg-destructive/10 rounded px-3 py-2">{assignError}</p>
+              )}
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setAssignModal(null)}
+                  className="flex-1 border border-border text-foreground text-sm py-2 rounded hover:bg-secondary transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={assignLoading}
+                  className="flex-1 bg-primary text-primary-foreground text-sm py-2 rounded hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  {assignLoading ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <footer className="border-t border-border py-4 text-center text-xs text-muted-foreground">
+        FECTI &copy; 2024 &mdash; Panel de administración
+      </footer>
+    </div>
+  )
+}
+
+function StatCard({
+  value,
+  label,
+  dark,
+  accent,
+}: {
+  value: number | string
+  label: string
+  dark?: boolean
+  accent?: boolean
+}) {
+  const bg = dark ? 'bg-primary text-primary-foreground' : accent ? 'bg-accent text-white' : 'bg-secondary text-foreground'
+  return (
+    <div className={`${bg} rounded-lg p-4 shadow-sm`}>
+      <p className="text-2xl font-bold">{value}</p>
+      <p className="text-xs mt-0.5 opacity-75">{label}</p>
+    </div>
+  )
+}
