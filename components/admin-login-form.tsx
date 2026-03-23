@@ -36,14 +36,14 @@ export function AdminLoginForm() {
       return
     }
 
-    // Navegar después del delay mínimo para asegurar que la cookie se guardó
+    // Navegar después del delay para asegurar que la cookie se guardó
     setTimeout(() => {
       if (user.mustChangePassword) {
         router.push('/admin/change-password')
       } else {
         router.push('/admin/dashboard')
       }
-    }, 100)
+    }, 300)
   }
 
   return (

@@ -38,8 +38,9 @@ export async function POST(req: NextRequest) {
   res.cookies.set('session', cookie, {
     httpOnly: true,
     path: '/',
-    maxAge: 60 * 60 * 8, // 8 hours
-    sameSite: 'lax',
+    maxAge: 60 * 60 * 8,
+    sameSite: 'strict',
+    secure: false, // Set to true in production with HTTPS
   })
   return res
 }
