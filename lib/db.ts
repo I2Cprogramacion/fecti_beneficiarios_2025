@@ -1,19 +1,22 @@
-import { neon as createNeon } from '@neondatabase/serverless'
+import { neon as createNeon, type NeonQueryFunction } from '@neondatabase/serverless'
 
-let _sql: ReturnType<typeof createNeon> | null = null
+let _sql: NeonQueryFunction<false, false> | null = null
 
-export function getSql() {
+function getSql() {
   if (!_sql) {
-    if (!process.env.DATABASE_URL) {
-      throw new Error('DATABASE_URL not configured')
+    const url = process.env.DATABASE_URL
+    if (!url) {
+      // During build, DATABASE_URL might not be available
+      // Return a dummy function that throws when called
+      return ((strings: TemplateStringsArray, ...values: unknown[]) => {
+        throw new Error('DATABASE_URL not configured')
+      }) as NeonQueryFunction<false, false>
     }
-    _sql = createNeon(process.env.DATABASE_URL)
+    _sql = createNeon(url)
   }
   return _sql
 }
 
-export const sql = new Proxy({}, {
-  get: (target, prop) => {
-    return getSql()[prop as keyof ReturnType<typeof createNeon>]
-  }
-}) as ReturnType<typeof createNeon>
+export const sql = (strings: TemplateStringsArray, ...values: unknown[]) => {
+  return getSql()(strings, ...values)
+}
