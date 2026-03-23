@@ -40,7 +40,7 @@ export default async function HomePage() {
         </div>
 
         {/* CTA */}
-        <div className="bg-card border border-border rounded-lg p-8 text-center shadow-sm">
+        <div className="bg-card border border-border rounded-lg p-8 text-center shadow-sm mb-12">
           <h2 className="text-xl font-semibold text-foreground mb-2">Acceso a proyectos</h2>
           <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
             Busca tu proyecto en la lista, descarga la plantilla y sube tu reporte una vez llenado.
@@ -51,6 +51,55 @@ export default async function HomePage() {
           >
             Ver todos los proyectos
           </Link>
+        </div>
+
+        {/* Galería de resultados oficiales */}
+        <div className="mb-12">
+          <h2 className="text-xl font-semibold text-foreground mb-1">Publicación de Resultados</h2>
+          <p className="text-muted-foreground text-sm mb-6">
+            Documento oficial con la lista completa de proyectos beneficiarios FECTI 2025
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="border border-border rounded-lg overflow-hidden bg-card hover:shadow-lg transition-shadow">
+              <div className="relative w-full aspect-[8.5/11] bg-muted">
+                <img
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/BEN1-RCPpynEqeP0d5ylhnKdetBvOVlofQT.png"
+                  alt="Página 1 - Resultados FECTI 2025"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-3">
+                <p className="text-xs font-semibold text-foreground">Página 1 de 3</p>
+                <p className="text-xs text-muted-foreground mt-1">Proyectos 1-19</p>
+              </div>
+            </div>
+            <div className="border border-border rounded-lg overflow-hidden bg-card hover:shadow-lg transition-shadow">
+              <div className="relative w-full aspect-[8.5/11] bg-muted">
+                <img
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/BEN2-FnHG0KIL6ermJAUyhnKv8lDk0wyUFC.png"
+                  alt="Página 2 - Resultados FECTI 2025"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-3">
+                <p className="text-xs font-semibold text-foreground">Página 2 de 3</p>
+                <p className="text-xs text-muted-foreground mt-1">Proyectos 20-48</p>
+              </div>
+            </div>
+            <div className="border border-border rounded-lg overflow-hidden bg-card hover:shadow-lg transition-shadow">
+              <div className="relative w-full aspect-[8.5/11] bg-muted">
+                <img
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/BEN3-bDzWHBXbc0yeIiXUfQkAqCxoaZC1ga.png"
+                  alt="Página 3 - Resultados FECTI 2025"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-3">
+                <p className="text-xs font-semibold text-foreground">Página 3 de 3</p>
+                <p className="text-xs text-muted-foreground mt-1">Proyectos 50-62 + Firma</p>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
 
