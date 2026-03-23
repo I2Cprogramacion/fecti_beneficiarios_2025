@@ -6,17 +6,8 @@ import { NextRequest, NextResponse } from 'next/server'
 // It recreates the database schema and seeds the projects
 
 export async function POST(request: NextRequest) {
-  // Auth check - can be disabled temporarily for first migration
-  const authHeader = request.headers.get('authorization')
-  const migrationSecret = process.env.MIGRATION_SECRET
-  
-  // Log for debugging
-  console.log('Auth Header:', authHeader)
-  console.log('Secret configured:', !!migrationSecret)
-  
-  if (migrationSecret && authHeader !== `Bearer ${migrationSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  // Migration endpoint - remove auth check temporarily
+  console.log('Migration endpoint called')
 
   if (!process.env.DATABASE_URL) {
     return NextResponse.json({ error: 'DATABASE_URL not configured' }, { status: 500 })
