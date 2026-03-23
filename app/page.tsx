@@ -5,10 +5,19 @@ import { SponsorsFooter } from '@/components/sponsors-footer'
 import { GuiaPdfModal } from '@/components/guia-pdf-modal'
 import { sql } from '@/lib/db'
 
+// Make this page dynamic to avoid build-time database queries
+export const dynamic = 'force-dynamic'
+
 async function getStats() {
-  const [total] = await sql`SELECT COUNT(*) AS count FROM projects`
-  const [submitted] = await sql`SELECT COUNT(*) AS count FROM submissions`
-  return { total: Number(total.count), submitted: Number(submitted.count) }
+  try {
+    const [total] = await sql`SELECT COUNT(*) AS count FROM projects`
+    const [submitted] = await sql`SELECT COUNT(*) AS count FROM submissions`
+    return { total: Number(total.count), submitted: Number(submitted.count) }
+  } catch (error) {
+    // Database not ready yet, return defaults
+    console.log('Database query failed, using defaults:', error)
+    return { total: 0, submitted: 0 }
+  }
 }
 
 export default async function HomePage() {
