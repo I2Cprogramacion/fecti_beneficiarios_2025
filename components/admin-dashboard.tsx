@@ -244,7 +244,7 @@ export function AdminDashboard({
                         ? new Date(p.uploaded_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
                         : '—'}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => openAssignModal(p)}
@@ -335,7 +335,7 @@ export function AdminDashboard({
       )}
 
       <footer className="border-t border-border py-4 text-center text-xs text-muted-foreground">
-        FECTI &copy; 2024 &mdash; Panel de administración
+        FECTI &copy; 2025 &mdash; Panel de administración
       </footer>
     </div>
   )

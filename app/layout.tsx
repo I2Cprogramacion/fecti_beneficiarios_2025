@@ -8,7 +8,7 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: 'FECTI – Seguimiento de Proyectos',
-  description: 'Plataforma de seguimiento para beneficiarios de la convocatoria FECTI 2024.',
+  description: 'Plataforma de seguimiento para beneficiarios de la convocatoria FECTI 2025.',
   generator: 'v0.app',
   icons: {
     icon: [
