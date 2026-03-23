@@ -2,6 +2,9 @@ import Link from 'next/link'
 import { SiteHeader } from '@/components/site-header'
 import { sql } from '@/lib/db'
 
+// Make this page dynamic to avoid build-time database queries
+export const dynamic = 'force-dynamic'
+
 const COMPONENT_LABELS: Record<string, string> = {
   'C01-INFRA': 'C01 – Infraestructura',
   'C02-IBA':   'C02 – Investigación Básica Aplicada',
@@ -10,13 +13,19 @@ const COMPONENT_LABELS: Record<string, string> = {
 }
 
 async function getProjects() {
-  return sql`
-    SELECT p.id, p.num, p.clave, p.componente, p.titulo,
-      CASE WHEN s.id IS NOT NULL THEN TRUE ELSE FALSE END AS submitted
-    FROM projects p
-    LEFT JOIN submissions s ON s.project_id = p.id
-    ORDER BY p.num ASC
-  `
+  try {
+    return await sql`
+      SELECT p.id, p.num, p.clave, p.componente, p.titulo,
+        CASE WHEN s.id IS NOT NULL THEN TRUE ELSE FALSE END AS submitted
+      FROM projects p
+      LEFT JOIN submissions s ON s.project_id = p.id
+      ORDER BY p.num ASC
+    `
+  } catch (error) {
+    // Database not ready yet, return empty array
+    console.log('Database query failed, returning empty array:', error)
+    return []
+  }
 }
 
 export default async function ProyectosPage() {

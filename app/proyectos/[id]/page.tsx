@@ -5,6 +5,9 @@ import { SiteHeader } from '@/components/site-header'
 import { ProjectLoginForm } from '@/components/project-login-form'
 import { UploadArea } from '@/components/upload-area'
 
+// Make this page dynamic to avoid build-time database queries
+export const dynamic = 'force-dynamic'
+
 const COMPONENT_LABELS: Record<string, string> = {
   'C01-INFRA': 'C01 – Infraestructura',
   'C02-IBA':   'C02 – Investigación Básica Aplicada',
@@ -13,19 +16,29 @@ const COMPONENT_LABELS: Record<string, string> = {
 }
 
 async function getProject(id: string) {
-  const rows = await sql`
-    SELECT p.id, p.num, p.clave, p.componente, p.titulo, p.monto,
-      s.file_name, s.uploaded_at
-    FROM projects p
-    LEFT JOIN submissions s ON s.project_id = p.id
-    WHERE p.id = ${id}
-  `
-  return rows[0] ?? null
+  try {
+    const rows = await sql`
+      SELECT p.id, p.num, p.clave, p.componente, p.titulo, p.monto,
+        s.file_name, s.uploaded_at
+      FROM projects p
+      LEFT JOIN submissions s ON s.project_id = p.id
+      WHERE p.id = ${id}
+    `
+    return rows[0] ?? null
+  } catch (error) {
+    console.log('Database query failed:', error)
+    return null
+  }
 }
 
 async function hasTemplate() {
-  const rows = await sql`SELECT 1 FROM settings WHERE key = 'template_pathname'`
-  return rows.length > 0
+  try {
+    const rows = await sql`SELECT 1 FROM settings WHERE key = 'template_pathname'`
+    return rows.length > 0
+  } catch (error) {
+    console.log('Database query failed:', error)
+    return false
+  }
 }
 
 export default async function ProjectPage({
