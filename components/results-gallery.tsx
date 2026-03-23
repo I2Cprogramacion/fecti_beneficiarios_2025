@@ -42,13 +42,13 @@ export function ResultsGallery() {
             <button
               key={idx}
               onClick={() => setSelectedIndex(idx)}
-              className="border border-border rounded-lg overflow-hidden bg-card hover:shadow-lg transition-shadow cursor-pointer group"
+              className="border border-border rounded-lg overflow-hidden bg-card hover:shadow-lg transition-shadow cursor-pointer group flex flex-col"
             >
-              <div className="relative w-full aspect-[8.5/11] bg-muted overflow-hidden">
+              <div className="relative w-full flex-1 bg-muted overflow-hidden">
                 <img
                   src={page.url}
                   alt={page.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform"
                 />
               </div>
               <div className="p-3">
@@ -85,11 +85,11 @@ export function ResultsGallery() {
             </div>
 
             {/* Image */}
-            <div className="flex-1 overflow-auto flex items-center justify-center">
+            <div className="flex-1 overflow-auto flex items-center justify-center bg-black/20 p-4">
               <img
                 src={pages[selectedIndex].url}
                 alt={pages[selectedIndex].title}
-                className="w-full h-full object-contain"
+                className="max-w-full max-h-full object-contain"
               />
             </div>
 

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { SiteHeader } from '@/components/site-header'
 import { ResultsGallery } from '@/components/results-gallery'
+import { SponsorsFooter } from '@/components/sponsors-footer'
 import { sql } from '@/lib/db'
 
 async function getStats() {
@@ -57,6 +58,9 @@ export default async function HomePage() {
         {/* Galería de resultados oficiales */}
         <ResultsGallery />
       </main>
+
+      {/* Sponsors Footer */}
+      <SponsorsFooter />
 
       <footer className="border-t border-border py-4 text-center text-xs text-muted-foreground">
         FECTI &copy; 2025 &mdash; Todos los derechos reservados
