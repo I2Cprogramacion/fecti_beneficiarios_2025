@@ -4,19 +4,9 @@ import { ChangePasswordForm } from '@/components/change-password-form'
 
 export default async function ChangePasswordPage() {
   const session = await getSession()
-  
-  console.log('[v0] Change-password page - session:', session)
 
-  if (!session || session.role !== 'admin') {
-    console.log('[v0] Redirecting - no session or not admin')
-    redirect('/admin')
-  }
-  if (!session.mustChangePassword) {
-    console.log('[v0] Redirecting to dashboard - mustChangePassword=false')
-    redirect('/admin/dashboard')
-  }
-
-  console.log('[v0] Showing change-password form')
+  if (!session || session.role !== 'admin') redirect('/admin')
+  if (!session.mustChangePassword) redirect('/admin/dashboard')
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background font-sans px-4">
