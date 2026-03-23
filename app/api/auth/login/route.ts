@@ -34,13 +34,16 @@ export async function POST(req: NextRequest) {
   }
 
   const cookie = makeSessionCookie(sessionUser)
-  const res = NextResponse.json({ ok: true, user: sessionUser })
+  
+  // Redirect en el SERVIDOR después de setear la cookie
+  const redirectUrl = user.must_change_password ? '/admin/change-password' : '/admin/dashboard'
+  const res = NextResponse.redirect(new URL(redirectUrl, req.url), { status: 303 })
   res.cookies.set('session', cookie, {
     httpOnly: true,
     path: '/',
     maxAge: 60 * 60 * 8,
     sameSite: 'strict',
-    secure: false, // Set to true in production with HTTPS
+    secure: false,
   })
   return res
 }

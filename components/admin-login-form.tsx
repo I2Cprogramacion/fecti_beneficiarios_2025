@@ -13,32 +13,26 @@ export function AdminLoginForm() {
     setError('')
     setLoading(true)
 
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+        redirect: 'follow', // Seguir redirects automáticamente
+      })
 
-    const data = await res.json()
-    setLoading(false)
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error || 'Error al iniciar sesión.')
+        setLoading(false)
+        return
+      }
 
-    if (!res.ok) {
-      setError(data.error || 'Error al iniciar sesión.')
-      return
-    }
-
-    const user = data.user
-    if (user.role !== 'admin') {
-      await fetch('/api/auth/logout', { method: 'POST' })
-      setError('Acceso no autorizado.')
-      return
-    }
-
-    // Forzar navegación completa (full page reload) para que el servidor lea la cookie
-    if (user.mustChangePassword) {
-      window.location.href = '/admin/change-password'
-    } else {
-      window.location.href = '/admin/dashboard'
+      // Si la respuesta es OK y fue un redirect, el navegador ya lo siguió
+      // La página cambiará automáticamente
+    } catch (err) {
+      setError('Error de conexión.')
+      setLoading(false)
     }
   }
 
@@ -51,7 +45,8 @@ export function AdminLoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full border border-input rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          disabled={loading}
+          className="w-full border border-input rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
           placeholder="admin@ejemplo.com"
         />
       </div>
@@ -62,7 +57,8 @@ export function AdminLoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="w-full border border-input rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          disabled={loading}
+          className="w-full border border-input rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
           placeholder="••••••••"
         />
       </div>
