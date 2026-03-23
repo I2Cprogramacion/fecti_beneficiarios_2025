@@ -36,12 +36,14 @@ export function AdminLoginForm() {
       return
     }
 
-    if (user.mustChangePassword) {
-      router.push('/admin/change-password')
-    } else {
-      router.push('/admin/dashboard')
-    }
-    router.refresh()
+    // Navegar después del delay mínimo para asegurar que la cookie se guardó
+    setTimeout(() => {
+      if (user.mustChangePassword) {
+        router.push('/admin/change-password')
+      } else {
+        router.push('/admin/dashboard')
+      }
+    }, 100)
   }
 
   return (

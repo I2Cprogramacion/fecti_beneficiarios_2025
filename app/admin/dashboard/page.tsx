@@ -7,8 +7,11 @@ async function getAllProjects() {
   return sql`
     SELECT
       p.id,
+      p.num,
       p.clave,
+      p.componente,
       p.titulo,
+      p.monto,
       u.email AS assigned_email,
       s.file_name,
       s.uploaded_at,
@@ -16,7 +19,7 @@ async function getAllProjects() {
     FROM projects p
     LEFT JOIN users u ON u.project_id = p.id AND u.role = 'beneficiary'
     LEFT JOIN submissions s ON s.project_id = p.id
-    ORDER BY p.clave ASC
+    ORDER BY p.num ASC
   `
 }
 

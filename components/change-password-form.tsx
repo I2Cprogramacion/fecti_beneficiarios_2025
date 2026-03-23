@@ -38,7 +38,6 @@ export function ChangePasswordForm() {
     }
 
     router.push('/admin/dashboard')
-    router.refresh()
   }
 
   return (

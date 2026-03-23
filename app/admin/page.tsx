@@ -5,13 +5,15 @@ import { AdminLoginForm } from '@/components/admin-login-form'
 export default async function AdminPage() {
   const session = await getSession()
 
+  // Si está autenticado como admin, ir a dashboard o change-password
   if (session?.role === 'admin') {
     if (session.mustChangePassword) {
-      redirect('/admin/change-password')
+      return redirect('/admin/change-password')
     }
-    redirect('/admin/dashboard')
+    return redirect('/admin/dashboard')
   }
 
+  // Mostrar formulario de login
   return (
     <div className="min-h-screen flex items-center justify-center bg-background font-sans px-4">
       <div className="w-full max-w-sm">

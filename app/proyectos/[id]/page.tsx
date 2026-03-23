@@ -5,9 +5,16 @@ import { SiteHeader } from '@/components/site-header'
 import { ProjectLoginForm } from '@/components/project-login-form'
 import { UploadArea } from '@/components/upload-area'
 
+const COMPONENT_LABELS: Record<string, string> = {
+  'C01-INFRA': 'C01 – Infraestructura',
+  'C02-IBA':   'C02 – Investigación Básica Aplicada',
+  'C03-FT':    'C03 – Formación de Talento',
+  'C04-IYE':   'C04 – Innovación y Empresa',
+}
+
 async function getProject(id: string) {
   const rows = await sql`
-    SELECT p.id, p.clave, p.titulo,
+    SELECT p.id, p.num, p.clave, p.componente, p.titulo, p.monto,
       s.file_name, s.uploaded_at
     FROM projects p
     LEFT JOIN submissions s ON s.project_id = p.id
@@ -44,10 +51,24 @@ export default async function ProjectPage({
       <main className="max-w-2xl mx-auto px-4 py-8 w-full flex-1">
         {/* Project header */}
         <div className="bg-card border border-border rounded-lg p-6 mb-6 shadow-sm">
-          <span className="text-xs font-mono text-accent font-semibold">{project.clave}</span>
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
+              #{project.num}
+            </span>
+            <span className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded font-medium">
+              {COMPONENT_LABELS[project.componente] ?? project.componente}
+            </span>
+          </div>
+          <span className="text-xs font-mono text-muted-foreground">{project.clave}</span>
           <h1 className="text-xl font-bold text-foreground mt-1 text-balance leading-snug">
             {project.titulo}
           </h1>
+          {project.monto && (
+            <p className="text-sm text-accent font-semibold mt-3">
+              Monto asignado:{' '}
+              {Number(project.monto).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+            </p>
+          )}
         </div>
 
         {/* Template download - always visible */}
@@ -89,7 +110,7 @@ export default async function ProjectPage({
       </main>
 
       <footer className="border-t border-border py-4 text-center text-xs text-muted-foreground">
-        FECTI &copy; 2024 &mdash; Todos los derechos reservados
+        FECTI &copy; 2025 &mdash; Todos los derechos reservados
       </footer>
     </div>
   )

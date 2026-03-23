@@ -28,7 +28,7 @@ export default async function HomePage() {
         />
         <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-12">
           <p className="text-primary-foreground text-xs sm:text-sm font-medium uppercase tracking-widest opacity-80 mb-1">
-            Convocatoria 2024
+            Convocatoria 2025
           </p>
           <h1 className="text-primary-foreground text-2xl sm:text-4xl font-bold text-balance leading-tight">
             Fondo Estatal para la Ciencia,<br className="hidden sm:block" /> Tecnología e Innovación
@@ -63,7 +63,7 @@ export default async function HomePage() {
       </main>
 
       <footer className="border-t border-border py-4 text-center text-xs text-muted-foreground">
-        FECTI &copy; 2024 &mdash; Todos los derechos reservados
+        FECTI &copy; 2025 &mdash; Todos los derechos reservados
       </footer>
     </div>
   )

@@ -5,8 +5,11 @@ import { useRouter } from 'next/navigation'
 
 interface Project {
   id: number
+  num: number
   clave: string
+  componente: string
   titulo: string
+  monto: string
   assigned_email: string | null
   file_name: string | null
   uploaded_at: string | null
@@ -202,23 +205,29 @@ export function AdminDashboard({
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-secondary border-b border-border">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Clave</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Título</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden md:table-cell">Correo asignado</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Estatus</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden lg:table-cell">Archivo</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden lg:table-cell">Fecha</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Acciones</th>
+                  <th className="text-left px-3 py-3 text-xs font-semibold text-muted-foreground">#</th>
+                  <th className="text-left px-3 py-3 text-xs font-semibold text-muted-foreground hidden sm:table-cell">Componente</th>
+                  <th className="text-left px-3 py-3 text-xs font-semibold text-muted-foreground">Clave / Título</th>
+                  <th className="text-left px-3 py-3 text-xs font-semibold text-muted-foreground hidden md:table-cell">Correo asignado</th>
+                  <th className="text-left px-3 py-3 text-xs font-semibold text-muted-foreground">Estatus</th>
+                  <th className="text-left px-3 py-3 text-xs font-semibold text-muted-foreground hidden lg:table-cell">Fecha</th>
+                  <th className="text-right px-3 py-3 text-xs font-semibold text-muted-foreground">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((p, i) => (
                   <tr key={p.id} className={`border-b border-border last:border-0 ${i % 2 === 0 ? '' : 'bg-secondary/30'}`}>
-                    <td className="px-4 py-3 font-mono text-xs text-accent font-semibold whitespace-nowrap">{p.clave}</td>
-                    <td className="px-4 py-3 text-xs text-foreground max-w-xs">
+                    <td className="px-3 py-3 text-xs font-bold text-primary">{p.num}</td>
+                    <td className="px-3 py-3 text-xs hidden sm:table-cell">
+                      <span className="bg-primary/10 text-primary font-medium px-1.5 py-0.5 rounded text-[10px] whitespace-nowrap">
+                        {p.componente}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-xs text-foreground max-w-xs">
+                      <span className="font-mono text-[10px] text-muted-foreground block mb-0.5">{p.clave}</span>
                       <span className="line-clamp-2">{p.titulo}</span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">
+                    <td className="px-3 py-3 text-xs text-muted-foreground hidden md:table-cell">
                       {p.assigned_email ?? <span className="italic opacity-50">Sin asignar</span>}
                     </td>
                     <td className="px-4 py-3">
@@ -230,10 +239,7 @@ export function AdminDashboard({
                         {p.submitted ? 'Subido' : 'Pendiente'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell max-w-[160px]">
-                      <span className="truncate block">{p.file_name ?? '—'}</span>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell whitespace-nowrap">
+                    <td className="px-3 py-3 text-xs text-muted-foreground hidden lg:table-cell whitespace-nowrap">
                       {p.uploaded_at
                         ? new Date(p.uploaded_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
                         : '—'}
