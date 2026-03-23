@@ -1,10 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export function AdminLoginForm() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -36,14 +34,12 @@ export function AdminLoginForm() {
       return
     }
 
-    // Navegar después del delay para asegurar que la cookie se guardó
-    setTimeout(() => {
-      if (user.mustChangePassword) {
-        router.push('/admin/change-password')
-      } else {
-        router.push('/admin/dashboard')
-      }
-    }, 300)
+    // Forzar navegación completa (full page reload) para que el servidor lea la cookie
+    if (user.mustChangePassword) {
+      window.location.href = '/admin/change-password'
+    } else {
+      window.location.href = '/admin/dashboard'
+    }
   }
 
   return (
