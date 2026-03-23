@@ -67,42 +67,41 @@ export function ResultsGallery() {
           onClick={() => setSelectedIndex(null)}
         >
           <div
-            className="relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-black rounded-lg overflow-hidden"
+            className="relative w-full max-w-2xl h-[92vh] flex flex-col bg-white rounded-lg overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between bg-foreground/5 px-4 py-3 border-b border-foreground/10">
-              <div>
-                <p className="text-sm font-semibold text-foreground">{pages[selectedIndex].title}</p>
-                <p className="text-xs text-muted-foreground">{pages[selectedIndex].subtitle}</p>
-              </div>
+            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 shrink-0">
+              <p className="text-sm font-semibold text-gray-800">
+                {pages[selectedIndex].title} &mdash; {pages[selectedIndex].subtitle}
+              </p>
               <button
                 onClick={() => setSelectedIndex(null)}
-                className="text-muted-foreground hover:text-foreground transition-colors text-2xl leading-none"
+                className="text-gray-400 hover:text-gray-800 transition-colors text-xl leading-none px-1"
               >
                 ✕
               </button>
             </div>
 
-            {/* Image */}
-            <div className="flex-1 overflow-auto flex items-center justify-center bg-black/20 p-4">
+            {/* Image — fills all available vertical space */}
+            <div className="flex-1 overflow-auto">
               <img
                 src={pages[selectedIndex].url}
                 alt={pages[selectedIndex].title}
-                className="max-w-full max-h-full object-contain"
+                className="w-full h-auto"
               />
             </div>
 
             {/* Navigation */}
-            <div className="flex items-center justify-between bg-foreground/5 px-4 py-3 border-t border-foreground/10">
+            <div className="flex items-center justify-between px-4 py-2 border-t border-gray-200 shrink-0">
               <button
                 onClick={() => setSelectedIndex((selectedIndex - 1 + pages.length) % pages.length)}
                 className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
               >
                 ← Anterior
               </button>
-              <span className="text-xs text-muted-foreground">
-                {selectedIndex + 1} de {pages.length}
+              <span className="text-xs text-gray-500">
+                {selectedIndex + 1} / {pages.length}
               </span>
               <button
                 onClick={() => setSelectedIndex((selectedIndex + 1) % pages.length)}
