@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { SiteHeader } from '@/components/site-header'
 import { sql } from '@/lib/db'
 
@@ -17,16 +16,9 @@ export default async function HomePage() {
     <div className="min-h-screen flex flex-col bg-background font-sans">
       <SiteHeader />
 
-      {/* Banner */}
-      <div className="relative w-full h-48 sm:h-64 overflow-hidden bg-primary">
-        <Image
-          src="/banner-fecti.jpg"
-          alt="FECTI – Fondo Estatal para la Ciencia, Tecnología e Innovación"
-          fill
-          className="object-cover opacity-60"
-          priority
-        />
-        <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-12">
+      {/* Banner - fondo azul sólido */}
+      <div className="w-full bg-primary py-12 sm:py-16 px-6 sm:px-12">
+        <div className="max-w-6xl mx-auto">
           <p className="text-primary-foreground text-xs sm:text-sm font-medium uppercase tracking-widest opacity-80 mb-1">
             Convocatoria 2025
           </p>
