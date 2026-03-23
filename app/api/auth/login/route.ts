@@ -3,11 +3,30 @@ import bcrypt from 'bcryptjs'
 import { sql } from '@/lib/db'
 import { makeSessionCookie } from '@/lib/auth'
 
+function errorRedirect(req: NextRequest, msg: string) {
+  const url = new URL('/admin', req.url)
+  url.searchParams.set('error', msg)
+  return NextResponse.redirect(url, { status: 303 })
+}
+
 export async function POST(req: NextRequest) {
-  const { email, password } = await req.json()
+  // Soportar tanto form-data (native form) como JSON (fetch)
+  let email = ''
+  let password = ''
+  const contentType = req.headers.get('content-type') ?? ''
+
+  if (contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data')) {
+    const formData = await req.formData()
+    email = (formData.get('email') as string) ?? ''
+    password = (formData.get('password') as string) ?? ''
+  } else {
+    const body = await req.json()
+    email = body.email ?? ''
+    password = body.password ?? ''
+  }
 
   if (!email || !password) {
-    return NextResponse.json({ error: 'Credenciales requeridas.' }, { status: 400 })
+    return errorRedirect(req, 'Credenciales requeridas.')
   }
 
   const rows = await sql`
@@ -16,13 +35,13 @@ export async function POST(req: NextRequest) {
   `
 
   if (!rows.length) {
-    return NextResponse.json({ error: 'Correo o contraseña incorrectos.' }, { status: 401 })
+    return errorRedirect(req, 'Correo o contraseña incorrectos.')
   }
 
   const user = rows[0]
   const valid = await bcrypt.compare(password, user.password_hash)
   if (!valid) {
-    return NextResponse.json({ error: 'Correo o contraseña incorrectos.' }, { status: 401 })
+    return errorRedirect(req, 'Correo o contraseña incorrectos.')
   }
 
   const sessionUser = {
@@ -34,16 +53,13 @@ export async function POST(req: NextRequest) {
   }
 
   const cookie = makeSessionCookie(sessionUser)
-  
-  // Redirect en el SERVIDOR después de setear la cookie
   const redirectUrl = user.must_change_password ? '/admin/change-password' : '/admin/dashboard'
   const res = NextResponse.redirect(new URL(redirectUrl, req.url), { status: 303 })
   res.cookies.set('session', cookie, {
     httpOnly: true,
     path: '/',
     maxAge: 60 * 60 * 8,
-    sameSite: 'strict',
-    secure: false,
+    sameSite: 'lax',
   })
   return res
 }

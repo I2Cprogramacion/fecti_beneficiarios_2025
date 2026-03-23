@@ -2,18 +2,19 @@ import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { AdminLoginForm } from '@/components/admin-login-form'
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
   const session = await getSession()
+  const params = await searchParams
 
-  // Si está autenticado como admin, ir a dashboard o change-password
   if (session?.role === 'admin') {
-    if (session.mustChangePassword) {
-      return redirect('/admin/change-password')
-    }
+    if (session.mustChangePassword) return redirect('/admin/change-password')
     return redirect('/admin/dashboard')
   }
 
-  // Mostrar formulario de login
   return (
     <div className="min-h-screen flex items-center justify-center bg-background font-sans px-4">
       <div className="w-full max-w-sm">
@@ -25,7 +26,7 @@ export default async function AdminPage() {
           <p className="text-sm text-muted-foreground mt-1">Acceso restringido</p>
         </div>
         <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
-          <AdminLoginForm />
+          <AdminLoginForm error={params.error} />
         </div>
       </div>
     </div>
