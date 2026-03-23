@@ -43,6 +43,7 @@ export function AdminLoginForm() {
       } else {
         router.push('/admin/dashboard')
       }
+      router.refresh()
     }, 100)
   }
 

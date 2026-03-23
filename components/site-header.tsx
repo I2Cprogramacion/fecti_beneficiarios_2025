@@ -26,7 +26,7 @@ export function SiteHeader({ userEmail, showLogout }: SiteHeaderProps) {
           </div>
           <div>
             <p className="text-sm font-semibold leading-tight">FECTI</p>
-            <p className="text-xs opacity-70 leading-tight hidden sm:block">Seguimiento de Proyectos 2024</p>
+            <p className="text-xs opacity-70 leading-tight hidden sm:block">Seguimiento de Proyectos 2025</p>
           </div>
         </Link>
         <nav className="flex items-center gap-4 text-sm">
