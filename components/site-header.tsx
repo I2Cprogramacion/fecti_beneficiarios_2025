@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -19,11 +20,16 @@ export function SiteHeader({ userEmail, showLogout }: SiteHeaderProps) {
 
   return (
     <header className="bg-primary text-primary-foreground shadow-md">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-accent flex items-center justify-center text-xs font-bold text-white">
-            F
-          </div>
+          <Image
+            src="/logo-f.png"
+            alt="FECTI"
+            width={40}
+            height={40}
+            className="rounded"
+            priority
+          />
           <div>
             <p className="text-sm font-semibold leading-tight">FECTI</p>
             <p className="text-xs opacity-70 leading-tight hidden sm:block">Seguimiento de Proyectos 2025</p>
