@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { SiteHeader } from '@/components/site-header'
 import { ResultsGallery } from '@/components/results-gallery'
 import { SponsorsFooter } from '@/components/sponsors-footer'
+import { GuiaPdfModal } from '@/components/guia-pdf-modal'
 import { sql } from '@/lib/db'
 
 async function getStats() {
@@ -25,7 +26,7 @@ export default async function HomePage() {
             Convocatoria 2025
           </p>
           <h1 className="text-primary-foreground text-2xl sm:text-4xl font-bold text-balance leading-tight">
-            Fondo Estatal para la Ciencia,<br className="hidden sm:block" /> Tecnología e Innovación
+            Fondo Estatal de Ciencia,<br className="hidden sm:block" /> Tecnología e Innovación
           </h1>
           <p className="text-primary-foreground/80 text-sm sm:text-base mt-2">
             Plataforma de seguimiento para proyectos beneficiarios
@@ -42,17 +43,22 @@ export default async function HomePage() {
         </div>
 
         {/* CTA */}
-        <div className="bg-card border border-border rounded-lg p-8 text-center shadow-sm mb-12">
-          <h2 className="text-xl font-semibold text-foreground mb-2">Acceso a proyectos</h2>
-          <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
-            Busca tu proyecto en la lista, descarga la plantilla y sube tu reporte una vez llenado.
-          </p>
-          <Link
-            href="/proyectos"
-            className="inline-block bg-primary text-primary-foreground text-sm font-medium px-6 py-2.5 rounded hover:bg-primary/90 transition-colors"
-          >
-            Ver todos los proyectos
-          </Link>
+        <div className="bg-card border border-border rounded-lg p-8 shadow-sm mb-12 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">Acceso a proyectos</h2>
+            <p className="text-muted-foreground text-sm max-w-md">
+              Busca tu proyecto en la lista, descarga la plantilla y sube tu reporte una vez llenado.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <GuiaPdfModal />
+            <Link
+              href="/proyectos"
+              className="inline-block bg-primary text-primary-foreground text-sm font-medium px-6 py-2.5 rounded hover:bg-primary/90 transition-colors"
+            >
+              Ver todos los proyectos
+            </Link>
+          </div>
         </div>
 
         {/* Galería de resultados oficiales */}
