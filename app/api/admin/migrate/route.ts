@@ -6,9 +6,11 @@ import { NextRequest, NextResponse } from 'next/server'
 // It recreates the database schema and seeds the projects
 
 export async function POST(request: NextRequest) {
-  // Simple auth check - you should use a proper auth method
+  // Simple auth check - validate Bearer token
   const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.MIGRATION_SECRET}`) {
+  const expectedAuth = `Bearer ${process.env.MIGRATION_SECRET}`
+  
+  if (authHeader !== expectedAuth) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
