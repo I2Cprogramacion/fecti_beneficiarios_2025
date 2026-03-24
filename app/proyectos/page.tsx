@@ -9,7 +9,7 @@ const COMPONENT_LABELS: Record<string, string> = {
   'C01-INFRA': 'C01 – Infraestructura',
   'C02-IBA':   'C02 – Investigación Básica Aplicada',
   'C03-FT':    'C03 – Formación de Talento',
-  'C04-IYE':   'C04 – Innovación y Empresa',
+  'C04-IYE':   'C04 – Innovación y Emprendimiento',
 }
 
 async function getProjects() {
