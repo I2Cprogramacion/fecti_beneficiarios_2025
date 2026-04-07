@@ -24,6 +24,7 @@ export default async function AdminUsersPage() {
   const session = await getSession()
   if (!session || session.role !== 'admin') redirect('/admin')
   if (session.mustChangePassword) redirect('/admin/change-password')
+  if (session.email !== 'daron.tarin@i2c.com.mx') redirect('/admin/dashboard')
 
   const admins = await getAdminUsers()
 

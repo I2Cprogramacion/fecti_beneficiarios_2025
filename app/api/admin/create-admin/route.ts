@@ -30,6 +30,9 @@ export async function POST(req: NextRequest) {
     if (!session || session.role !== 'admin') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
+    if (session.email !== 'daron.tarin@i2c.com.mx') {
+      return NextResponse.json({ error: 'Solo daron.tarin@i2c.com.mx puede crear administradores' }, { status: 403 })
+    }
 
     const body = await req.json()
     const { email, password } = body
