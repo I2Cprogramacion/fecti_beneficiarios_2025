@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { HotTable } from '@handsontable/react'
-import '@handsontable/react/dist/react-handsontable.css'
+import 'handsontable/dist/handsontable.full.min.css'
 
 interface ExcelPreviewInlineProps {
   projectId: number
