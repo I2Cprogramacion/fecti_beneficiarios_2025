@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-interface ExcelPreviewInlineProps {
+interface LuckysheetViewerProps {
   projectId: number
 }
 
@@ -12,7 +12,7 @@ declare global {
   }
 }
 
-export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
+export function LuckysheetViewer({ projectId }: LuckysheetViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -128,22 +128,16 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-          <p className="text-sm text-muted-foreground">Cargando archivo...</p>
-        </div>
+      <div className="flex items-center justify-center h-full">
+        <div className="text-sm text-muted-foreground">Cargando archivo...</div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <p className="text-destructive mb-2 text-sm">Error al cargar el archivo</p>
-          <p className="text-xs text-muted-foreground">{error}</p>
-        </div>
+      <div className="flex items-center justify-center h-full">
+        <div className="text-sm text-destructive">Error: {error}</div>
       </div>
     )
   }
@@ -151,7 +145,7 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
   return (
     <div
       ref={containerRef}
-      className="w-full bg-card border border-border rounded"
+      className="w-full h-full bg-white"
       style={{ minHeight: '500px' }}
     />
   )
