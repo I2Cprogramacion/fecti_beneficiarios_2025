@@ -45,8 +45,9 @@ export function ProjectLoginForm({ projectId }: { projectId: number }) {
         return
       }
 
-      // Redirect después de login exitoso
-      router.push(user.mustChangePassword ? '/admin/change-password' : '/dashboard')
+      // Redirect usando el URL retornado del servidor
+      const redirectUrl = data.redirectUrl || `/proyectos/${projectId}`
+      router.push(redirectUrl)
     } catch (error) {
       setError('Error de conexión: ' + (error instanceof Error ? error.message : 'desconocido'))
     } finally {

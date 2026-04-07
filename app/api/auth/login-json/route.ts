@@ -45,9 +45,19 @@ export async function POST(req: NextRequest) {
     }
 
     const cookie = makeSessionCookie(sessionUser)
+    
+    // Determine redirect URL based on role
+    let redirectUrl = '/dashboard'
+    if (user.role === 'admin') {
+      redirectUrl = user.must_change_password ? '/admin/change-password' : '/admin/dashboard'
+    } else if (user.role === 'beneficiary' && user.project_id) {
+      redirectUrl = `/proyectos/${user.project_id}`
+    }
+    
     const response = NextResponse.json({
       ok: true,
       user: sessionUser,
+      redirectUrl: redirectUrl,
     })
 
     response.cookies.set('session', cookie, {
