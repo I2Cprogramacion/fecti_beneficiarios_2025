@@ -48,6 +48,17 @@ export function AdminDashboard({
   const [assignError, setAssignError] = useState('')
   const [assignLoading, setAssignLoading] = useState(false)
 
+  // Edit user modal
+  const [editUserModal, setEditUserModal] = useState<Project | null>(null)
+  const [editEmail, setEditEmail] = useState('')
+  const [editPassword, setEditPassword] = useState('')
+  const [editError, setEditError] = useState('')
+  const [editLoading, setEditLoading] = useState(false)
+
+  // Reset submission confirmation
+  const [resetModal, setResetModal] = useState<Project | null>(null)
+  const [resetLoading, setResetLoading] = useState(false)
+
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/admin')
@@ -71,6 +82,45 @@ export function AdminDashboard({
     setAssignEmail(project.assigned_email ?? '')
     setAssignPassword('')
     setAssignError('')
+  }
+
+  function openEditUserModal(project: Project) {
+    setEditUserModal(project)
+    setEditEmail(project.assigned_email ?? '')
+    setEditPassword('')
+    setEditError('')
+  }
+
+  async function handleEditUserSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editUserModal) return
+    setEditError('')
+    setEditLoading(true)
+    const res = await fetch('/api/admin/update-user?projectId=' + editUserModal.id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: editEmail, password: editPassword }),
+    })
+    const data = await res.json()
+    setEditLoading(false)
+    if (!res.ok) { setEditError(data.error || 'Error.'); return }
+    setEditUserModal(null)
+    startTransition(() => router.refresh())
+  }
+
+  async function handleResetSubmission() {
+    if (!resetModal) return
+    setResetLoading(true)
+    const res = await fetch('/api/admin/reset-submission?projectId=' + resetModal.id, {
+      method: 'DELETE',
+    })
+    setResetLoading(false)
+    if (!res.ok) {
+      alert('Error al reiniciar envío')
+      return
+    }
+    setResetModal(null)
+    startTransition(() => router.refresh())
   }
 
   async function handleAssignSubmit(e: React.FormEvent) {
@@ -261,16 +311,36 @@ export function AdminDashboard({
                         <button
                           onClick={() => openAssignModal(p)}
                           className="text-xs text-primary hover:underline"
+                          title="Asignar o crear nuevo usuario"
                         >
                           Asignar
                         </button>
-                        {p.submitted && (
-                          <a
-                            href={`/api/admin/download?projectId=${p.id}`}
-                            className="text-xs text-accent hover:underline"
+                        {p.assigned_email && (
+                          <button
+                            onClick={() => openEditUserModal(p)}
+                            className="text-xs text-blue-600 hover:underline"
+                            title="Editar correo y contraseña"
                           >
-                            Descargar
-                          </a>
+                            Editar
+                          </button>
+                        )}
+                        {p.submitted && (
+                          <>
+                            <a
+                              href={`/api/admin/download?projectId=${p.id}`}
+                              className="text-xs text-accent hover:underline"
+                              title="Descargar archivo"
+                            >
+                              Descargar
+                            </a>
+                            <button
+                              onClick={() => setResetModal(p)}
+                              className="text-xs text-red-600 hover:underline"
+                              title="Reiniciar envío (eliminar archivo)"
+                            >
+                              Reiniciar
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>
@@ -342,6 +412,91 @@ export function AdminDashboard({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {editUserModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-card border border-border rounded-lg shadow-xl w-full max-w-sm p-6">
+            <h3 className="text-sm font-semibold text-foreground mb-1">Editar usuario</h3>
+            <p className="text-xs text-muted-foreground mb-4 text-pretty">
+              <span className="font-mono text-accent">{editUserModal.clave}</span> — {editUserModal.titulo}
+            </p>
+            <form onSubmit={handleEditUserSubmit} className="flex flex-col gap-3">
+              <div>
+                <label className="text-xs font-medium text-foreground block mb-1">Correo electrónico</label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  required
+                  className="w-full border border-input rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="beneficiario@ejemplo.com"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-foreground block mb-1">Nueva contraseña</label>
+                <input
+                  type="text"
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  required
+                  className="w-full border border-input rounded px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Nueva contraseña"
+                />
+              </div>
+              {editError && (
+                <p className="text-xs text-destructive bg-destructive/10 rounded px-3 py-2">{editError}</p>
+              )}
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setEditUserModal(null)}
+                  className="flex-1 border border-border text-foreground text-sm py-2 rounded hover:bg-secondary transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="flex-1 bg-blue-600 text-white text-sm py-2 rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {editLoading ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Submission Modal */}
+      {resetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-card border border-border rounded-lg shadow-xl w-full max-w-sm p-6">
+            <h3 className="text-sm font-semibold text-foreground mb-1">Reiniciar envío</h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              ¿Estás seguro de que deseas reiniciar el envío de este proyecto? Se eliminará el archivo actual y volverá a mostrar como pendiente.
+            </p>
+            <p className="text-xs text-pretty mb-4">
+              <span className="font-mono text-accent">{resetModal.clave}</span> — {resetModal.titulo}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setResetModal(null)}
+                className="flex-1 border border-border text-foreground text-sm py-2 rounded hover:bg-secondary transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleResetSubmission}
+                disabled={resetLoading}
+                className="flex-1 bg-red-600 text-white text-sm py-2 rounded hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {resetLoading ? 'Reiniciando...' : 'Reiniciar'}
+              </button>
+            </div>
           </div>
         </div>
       )}
