@@ -78,3 +78,47 @@ export async function POST(req: NextRequest) {
     )
   }
 }
+
+// DELETE: Remove an admin user
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = await getSession()
+    if (!session || session.role !== 'admin') {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+    if (session.email !== 'daron.tarin@i2c.com.mx') {
+      return NextResponse.json({ error: 'Solo daron.tarin@i2c.com.mx puede eliminar administradores' }, { status: 403 })
+    }
+
+    const { searchParams } = new URL(req.url)
+    const adminId = searchParams.get('id')
+
+    if (!adminId) {
+      return NextResponse.json({ error: 'ID del administrador requerido' }, { status: 400 })
+    }
+
+    // Prevent deleting yourself
+    const adminToDelete = await sql`SELECT email FROM users WHERE id = ${adminId}`
+    if (!adminToDelete.length) {
+      return NextResponse.json({ error: 'Administrador no encontrado' }, { status: 404 })
+    }
+
+    if (adminToDelete[0].email === session.email) {
+      return NextResponse.json({ error: 'No puedes eliminar tu propia cuenta' }, { status: 400 })
+    }
+
+    // Delete the admin
+    await sql`DELETE FROM users WHERE id = ${adminId} AND role = 'admin'`
+
+    return NextResponse.json({
+      ok: true,
+      message: 'Administrador eliminado correctamente',
+    })
+  } catch (error) {
+    console.error('Error deleting admin:', error)
+    return NextResponse.json(
+      { error: 'Error al eliminar admin: ' + (error instanceof Error ? error.message : 'desconocido') },
+      { status: 500 }
+    )
+  }
+}

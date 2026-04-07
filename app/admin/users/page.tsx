@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { CreateAdminForm } from '@/components/create-admin-form'
+import { AdminsList } from '@/components/admins-list'
 import { Card } from '@/components/ui/card'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -54,28 +55,7 @@ export default async function AdminUsersPage() {
               <h2 className="text-lg font-semibold text-foreground mb-4">
                 Administradores registrados
               </h2>
-              <div className="space-y-3">
-                {admins.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">No hay administradores registrados</p>
-                ) : (
-                  admins.map((admin: any) => (
-                    <div
-                      key={admin.id}
-                      className="p-3 bg-muted rounded-lg border border-border"
-                    >
-                      <p className="font-medium text-foreground">{admin.email}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Creado: {new Date(admin.created_at).toLocaleDateString('es-MX')}
-                      </p>
-                      {admin.must_change_password && (
-                        <p className="text-xs text-yellow-600 mt-1">
-                          ⚠️ Debe cambiar contraseña
-                        </p>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
+              <AdminsList admins={admins} currentUserEmail={session.email} />
             </Card>
           </div>
         </div>
