@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { AdminDashboard } from '@/components/admin-dashboard'
-import Link from 'next/link'
 
 async function getAllProjects() {
   return sql`
@@ -42,24 +41,12 @@ export default async function AdminDashboardPage() {
   const totalSubmitted = projects.filter((p) => p.submitted).length
 
   return (
-    <>
-      {/* Admin navbar */}
-      <div className="bg-background border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-foreground">Panel de Administrador</h1>
-          <Link href="/admin/users" className="text-sm text-primary hover:text-primary/80">
-            Gestionar administradores
-          </Link>
-        </div>
-      </div>
-      
-      {/* Dashboard */}
-      <AdminDashboard
-        projects={projects}
-        templatePathname={templatePathname}
-        totalSubmitted={totalSubmitted}
-        adminEmail={session.email}
-      />
-    </>
+    <AdminDashboard
+      projects={projects}
+      templatePathname={templatePathname}
+      totalSubmitted={totalSubmitted}
+      adminEmail={session.email}
+      manageUsersUrl="/admin/users"
+    />
   )
 }

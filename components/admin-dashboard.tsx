@@ -21,6 +21,7 @@ interface AdminDashboardProps {
   templatePathname: string | null
   totalSubmitted: number
   adminEmail: string
+  manageUsersUrl?: string
 }
 
 export function AdminDashboard({
@@ -28,6 +29,7 @@ export function AdminDashboard({
   templatePathname,
   totalSubmitted,
   adminEmail,
+  manageUsersUrl,
 }: AdminDashboardProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -112,12 +114,22 @@ export function AdminDashboard({
               <p className="text-xs opacity-70 hidden sm:block">{adminEmail}</p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="bg-accent hover:bg-accent/90 text-white text-xs px-3 py-1.5 rounded transition-colors"
-          >
-            Cerrar sesión
-          </button>
+          <nav className="flex items-center gap-4">
+            {manageUsersUrl && (
+              <a
+                href={manageUsersUrl}
+                className="text-xs font-medium opacity-90 hover:opacity-100 transition-opacity"
+              >
+                Gestionar administradores
+              </a>
+            )}
+            <button
+              onClick={handleLogout}
+              className="bg-accent hover:bg-accent/90 text-white text-xs px-3 py-1.5 rounded transition-colors"
+            >
+              Cerrar sesión
+            </button>
+          </nav>
         </div>
       </header>
 
