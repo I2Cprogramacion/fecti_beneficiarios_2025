@@ -59,6 +59,10 @@ export function AdminDashboard({
   const [resetModal, setResetModal] = useState<Project | null>(null)
   const [resetLoading, setResetLoading] = useState(false)
 
+  // Delete user confirmation
+  const [deleteUserModal, setDeleteUserModal] = useState<Project | null>(null)
+  const [deleteUserLoading, setDeleteUserLoading] = useState(false)
+
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/admin')
@@ -120,6 +124,21 @@ export function AdminDashboard({
       return
     }
     setResetModal(null)
+    startTransition(() => router.refresh())
+  }
+
+  async function handleDeleteUser() {
+    if (!deleteUserModal) return
+    setDeleteUserLoading(true)
+    const res = await fetch('/api/admin/delete-user?projectId=' + deleteUserModal.id, {
+      method: 'DELETE',
+    })
+    setDeleteUserLoading(false)
+    if (!res.ok) {
+      alert('Error al eliminar usuario')
+      return
+    }
+    setDeleteUserModal(null)
     startTransition(() => router.refresh())
   }
 
@@ -342,6 +361,15 @@ export function AdminDashboard({
                             </button>
                           </>
                         )}
+                        {p.assigned_email && !p.submitted && (
+                          <button
+                            onClick={() => setDeleteUserModal(p)}
+                            className="text-xs text-red-600 hover:underline"
+                            title="Eliminar usuario"
+                          >
+                            Eliminar
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -495,6 +523,38 @@ export function AdminDashboard({
                 className="flex-1 bg-red-600 text-white text-sm py-2 rounded hover:bg-red-700 transition-colors disabled:opacity-50"
               >
                 {resetLoading ? 'Reiniciando...' : 'Reiniciar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Modal */}
+      {deleteUserModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-card border border-border rounded-lg shadow-xl w-full max-w-sm p-6">
+            <h3 className="text-sm font-semibold text-foreground mb-1">Eliminar usuario</h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              ¿Estás seguro de que deseas eliminar el usuario asignado a este proyecto?
+            </p>
+            <p className="text-xs text-pretty mb-4">
+              <span className="font-mono text-accent">{deleteUserModal.clave}</span> — {deleteUserModal.titulo}
+              <br />
+              <span className="text-xs opacity-75">{deleteUserModal.assigned_email}</span>
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteUserModal(null)}
+                className="flex-1 border border-border text-foreground text-sm py-2 rounded hover:bg-secondary transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteUser}
+                disabled={deleteUserLoading}
+                className="flex-1 bg-red-600 text-white text-sm py-2 rounded hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {deleteUserLoading ? 'Eliminando...' : 'Eliminar'}
               </button>
             </div>
           </div>
