@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import Link from 'next/link'
+import { ExcelPreviewClient } from '@/components/excel-preview-client'
 
 async function getSubmission(projectId: string) {
   try {
@@ -42,9 +43,6 @@ export default async function PreviewPage({
     )
   }
 
-  // Use Microsoft Office Online Viewer with our API endpoint
-  const viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(`${process.env.NEXT_PUBLIC_APP_URL || 'https://fecti-beneficiarios-2025.vercel.app'}/api/admin/download?projectId=${projectId}`)}`
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -64,14 +62,7 @@ export default async function PreviewPage({
       </div>
 
       {/* Viewer */}
-      <div className="flex-1 overflow-hidden">
-        <iframe
-          src={viewerUrl}
-          className="w-full h-full border-0"
-          title="Vista previa del archivo"
-          sandbox="allow-same-origin allow-scripts allow-popups allow-top-navigation-by-user-activation"
-        />
-      </div>
+      <ExcelPreviewClient projectId={projectId} />
     </div>
   )
 }
