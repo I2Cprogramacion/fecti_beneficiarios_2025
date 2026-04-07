@@ -15,28 +15,43 @@ export function ProjectLoginForm({ projectId }: { projectId: number }) {
     setError('')
     setLoading(true)
 
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
+    try {
+      const res = await fetch('/api/auth/login-json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
 
-    const data = await res.json()
-    setLoading(false)
+      let data
+      try {
+        data = await res.json()
+      } catch {
+        setError('Error del servidor: respuesta inválida')
+        setLoading(false)
+        return
+      }
 
-    if (!res.ok) {
-      setError(data.error || 'Error al iniciar sesión.')
-      return
+      if (!res.ok) {
+        setError(data.error || 'Error al iniciar sesión')
+        setLoading(false)
+        return
+      }
+
+      const user = data.user
+      if (user.role !== 'beneficiary' || user.projectId !== projectId) {
+        await fetch('/api/auth/logout', { method: 'POST' })
+        setError('Las credenciales no corresponden a este proyecto.')
+        setLoading(false)
+        return
+      }
+
+      // Redirect después de login exitoso
+      router.push(user.mustChangePassword ? '/admin/change-password' : '/dashboard')
+    } catch (error) {
+      setError('Error de conexión: ' + (error instanceof Error ? error.message : 'desconocido'))
+    } finally {
+      setLoading(false)
     }
-
-    const user = data.user
-    if (user.role !== 'beneficiary' || user.projectId !== projectId) {
-      await fetch('/api/auth/logout', { method: 'POST' })
-      setError('Las credenciales no corresponden a este proyecto.')
-      return
-    }
-
-    router.refresh()
   }
 
   return (
