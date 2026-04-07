@@ -24,6 +24,9 @@ export async function DELETE(req: NextRequest) {
 
     // Delete the submission for this project
     await sql`DELETE FROM submissions WHERE project_id = ${projectId}`
+    
+    // Delete the user (beneficiary) assigned to this project
+    await sql`DELETE FROM users WHERE project_id = ${projectId} AND role = 'beneficiary'`
 
     return NextResponse.json({
       ok: true,
