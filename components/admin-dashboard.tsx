@@ -2,6 +2,7 @@
 
 import { useState, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { ExcelPreviewInline } from './excel-preview-inline'
 
 interface Project {
   id: number
@@ -55,6 +56,9 @@ export function AdminDashboard({
   // Delete user confirmation
   const [deleteUserModal, setDeleteUserModal] = useState<Project | null>(null)
   const [deleteUserLoading, setDeleteUserLoading] = useState(false)
+
+  // Excel preview modal
+  const [previewModal, setPreviewModal] = useState<Project | null>(null)
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -316,15 +320,13 @@ export function AdminDashboard({
                         )}
                         {p.submitted && (
                           <>
-                            <a
-                              href={`/admin/preview/${p.id}`}
+                            <button
+                              onClick={() => setPreviewModal(p)}
                               className="text-xs text-accent hover:underline"
-                              title="Ver archivo en el navegador"
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              title="Ver archivo en modal"
                             >
                               Ver
-                            </a>
+                            </button>
                             <a
                               href={`/api/admin/download?projectId=${p.id}`}
                               className="text-xs text-accent hover:underline"
@@ -472,6 +474,32 @@ export function AdminDashboard({
               >
                 {deleteUserLoading ? 'Eliminando...' : 'Eliminar'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Excel Preview Modal */}
+      {previewModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-card border border-border rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="bg-primary text-primary-foreground p-4 border-b border-border flex items-center justify-between rounded-t-lg">
+              <div>
+                <h3 className="text-sm font-semibold">{previewModal.clave}</h3>
+                <p className="text-xs opacity-75">{previewModal.titulo}</p>
+              </div>
+              <button
+                onClick={() => setPreviewModal(null)}
+                className="text-xl hover:opacity-75 transition-opacity"
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="flex-1 overflow-auto p-4 bg-background">
+              <ExcelPreviewInline projectId={previewModal.id} />
             </div>
           </div>
         </div>
