@@ -3,6 +3,7 @@
 import { useState, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ExcelPreviewInline } from './excel-preview-inline'
+import { Rnd } from 'react-rnd'
 
 interface Project {
   id: number
@@ -481,28 +482,41 @@ export function AdminDashboard({
 
       {/* Excel Preview Modal */}
       {previewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="bg-card border border-border rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setPreviewModal(null)} />
+      )}
+      {previewModal && (
+        <Rnd
+          default={{
+            x: 100,
+            y: 100,
+            width: 1000,
+            height: 600,
+          }}
+          minWidth={400}
+          minHeight={300}
+          className="z-50"
+        >
+          <div className="bg-card border border-border rounded-lg shadow-2xl h-full flex flex-col">
             {/* Modal Header */}
-            <div className="bg-primary text-primary-foreground p-4 border-b border-border flex items-center justify-between rounded-t-lg">
-              <div>
+            <div className="bg-primary text-primary-foreground p-3 border-b border-border flex items-center justify-between cursor-move select-none rounded-t-lg hover:bg-primary/90 transition-colors">
+              <div className="flex-1">
                 <h3 className="text-sm font-semibold">{previewModal.clave}</h3>
-                <p className="text-xs opacity-75">{previewModal.titulo}</p>
+                <p className="text-xs opacity-75 truncate">{previewModal.titulo}</p>
               </div>
               <button
                 onClick={() => setPreviewModal(null)}
-                className="text-xl hover:opacity-75 transition-opacity"
+                className="text-lg hover:opacity-75 transition-opacity ml-4 shrink-0"
               >
                 ✕
               </button>
             </div>
             
             {/* Modal Body */}
-            <div className="flex-1 overflow-auto p-4 bg-background">
+            <div className="flex-1 overflow-auto p-3 bg-background">
               <ExcelPreviewInline projectId={previewModal.id} />
             </div>
           </div>
-        </div>
+        </Rnd>
       )}
 
       <footer className="border-t border-border py-4 text-center text-xs text-muted-foreground">

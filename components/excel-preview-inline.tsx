@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { HotTable } from '@handsontable/react'
+import 'handsontable/dist/handsontable.full.min.css'
 
 interface ExcelPreviewInlineProps {
   projectId: number
@@ -9,7 +11,8 @@ interface ExcelPreviewInlineProps {
 export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [tableHtml, setTableHtml] = useState<string>('')
+  const [data, setData] = useState<any[]>([])
+  const hotTableRef = useRef(null)
 
   useEffect(() => {
     async function loadExcel() {
@@ -26,18 +29,18 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
         const blob = await res.blob()
         const arrayBuffer = await blob.arrayBuffer()
         
-        // Dynamically import XLSX to avoid build issues
+        // Dynamically import XLSX
         const { read, utils } = await import('xlsx')
         
-        // Parse the workbook with the buffer as Uint8Array
+        // Parse the workbook
         const uint8Array = new Uint8Array(arrayBuffer)
         const workbook = read(uint8Array, { type: 'array' })
         const firstSheetName = workbook.SheetNames[0]
         const worksheet = workbook.Sheets[firstSheetName]
         
-        // Convert to HTML
-        const html = utils.sheet_to_html(worksheet)
-        setTableHtml(html)
+        // Convert to 2D array
+        const jsonData = utils.sheet_to_json(worksheet, { header: 1 })
+        setData((jsonData as any[]) || [])
       } catch (err) {
         console.error('Error loading Excel:', err)
         setError(err instanceof Error ? err.message : 'Error desconocido')
@@ -71,15 +74,29 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
     )
   }
 
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-sm text-muted-foreground">El archivo está vacío</p>
+      </div>
+    )
+  }
+
   return (
-    <div className="overflow-x-auto bg-card border border-border rounded-lg p-4">
-      <div 
-        dangerouslySetInnerHTML={{ __html: tableHtml }}
+    <div className="w-full bg-card border border-border rounded p-2">
+      <HotTable
+        ref={hotTableRef}
+        data={data}
+        readOnly={false}
+        rowHeaders={true}
+        colHeaders={true}
+        height="auto"
+        licenseKey="non-commercial-and-evaluation"
+        contextMenu={true}
+        copyPaste={true}
+        outsideClickDeselects={false}
         className="text-xs"
-        style={{
-          fontSize: '0.75rem',
-          lineHeight: '1rem',
-        }}
+        stretchH="all"
       />
     </div>
   )
