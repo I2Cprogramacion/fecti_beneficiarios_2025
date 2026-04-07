@@ -25,13 +25,14 @@ export async function GET() {
 
 // POST: Create new admin user
 export async function POST(req: NextRequest) {
-  const session = await getSession()
-  if (!session || session.role !== 'admin') {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-  }
-
   try {
-    const { email, password } = await req.json()
+    const session = await getSession()
+    if (!session || session.role !== 'admin') {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    const body = await req.json()
+    const { email, password } = body
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email y contraseña requeridos' }, { status: 400 })
@@ -68,6 +69,9 @@ export async function POST(req: NextRequest) {
     )
   } catch (error) {
     console.error('Error creating admin:', error)
-    return NextResponse.json({ error: 'Error al crear admin' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Error al crear admin: ' + (error instanceof Error ? error.message : 'desconocido') },
+      { status: 500 }
+    )
   }
 }

@@ -28,7 +28,14 @@ export function CreateAdminForm() {
         body: JSON.stringify({ email, password }),
       })
 
-      const data = await res.json()
+      let data
+      try {
+        data = await res.json()
+      } catch {
+        setError(`Error del servidor: respuesta inválida (${res.status})`)
+        setLoading(false)
+        return
+      }
 
       if (!res.ok) {
         setError(data.error || 'Error al crear admin')
@@ -46,7 +53,7 @@ export function CreateAdminForm() {
         setSuccess('')
       }, 3000)
     } catch (err) {
-      setError('Error de conexión')
+      setError('Error de conexión: ' + (err instanceof Error ? err.message : 'desconocido'))
     } finally {
       setLoading(false)
     }
