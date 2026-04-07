@@ -8,34 +8,35 @@ interface ExcelPreviewInlineProps {
 
 declare global {
   interface Window {
-    luckysheet: any
+    Handsontable: any
   }
 }
 
 export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const hotRef = useRef<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const initLuckysheet = async () => {
+    const initHandsontable = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        // Load Luckysheet CSS if not already loaded
-        if (!document.getElementById('luckysheet-css')) {
+        // Load Handsontable CSS
+        if (!document.getElementById('handsontable-css')) {
           const link = document.createElement('link')
-          link.id = 'luckysheet-css'
+          link.id = 'handsontable-css'
           link.rel = 'stylesheet'
-          link.href = 'https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.css'
+          link.href = 'https://cdn.jsdelivr.net/npm/handsontable@16.0.0/dist/handsontable.full.min.css'
           document.head.appendChild(link)
         }
 
-        // Load Luckysheet JS if not already loaded
-        if (typeof window.luckysheet === 'undefined') {
+        // Load Handsontable JS
+        if (typeof window.Handsontable === 'undefined') {
           const script = document.createElement('script')
-          script.src = 'https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js'
+          script.src = 'https://cdn.jsdelivr.net/npm/handsontable@16.0.0/dist/handsontable.full.min.js'
           script.async = true
           script.onload = async () => {
             await loadExcelData()
@@ -60,78 +61,58 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
           const uint8Array = new Uint8Array(arrayBuffer)
           const workbook = read(uint8Array, { type: 'array' })
 
-          // Convert workbook to Luckysheet format
-          const luckysheetData: any[] = []
+          // Get first sheet
+          const firstSheetName = workbook.SheetNames[0]
+          const worksheet = workbook.Sheets[firstSheetName]
           
-          workbook.SheetNames.forEach((sheetName, index) => {
-            const worksheet = workbook.Sheets[sheetName]
-            const jsonData = utils.sheet_to_json(worksheet, { header: 1 })
-            
-            // Convert to Luckysheet cell format
-            const cells: Record<string, any> = {}
-            ;(jsonData as any[]).forEach((row: any, rowIndex: number) => {
-              if (Array.isArray(row)) {
-                row.forEach((cell: any, colIndex: number) => {
-                  if (cell !== undefined && cell !== null && cell !== '') {
-                    const colLetter = String.fromCharCode(65 + (colIndex % 26))
-                    const cellAddress = `${colLetter}${rowIndex + 1}`
-                    cells[cellAddress] = {
-                      v: cell,
-                      m: String(cell)
-                    }
-                  }
-                })
-              }
-            })
+          // Convert to 2D array
+          const data = utils.sheet_to_json(worksheet, { header: 1 }) as any[]
 
-            luckysheetData.push({
-              name: sheetName,
-              index: index,
-              status: 1,
-              order: index,
-              hide: 0,
-              data: cells,
-              config: {
-                merge: {},
-                rowlen: {},
-                colWidth: {}
-              },
-              scrollLeft: 0,
-              scrollTop: 0,
-              selectItem: []
-            })
-          })
-
-          // Initialize Luckysheet
-          if (containerRef.current && window.luckysheet) {
+          // Initialize Handsontable in the container
+          if (containerRef.current && window.Handsontable) {
+            // Clear any existing content
             containerRef.current.innerHTML = ''
             
-            window.luckysheet.create({
-              container: containerRef.current,
-              title: 'Sheet Preview',
-              data: luckysheetData,
-              plugins: []
+            hotRef.current = new window.Handsontable(containerRef.current, {
+              data: data || [],
+              rowHeaders: true,
+              colHeaders: true,
+              height: 'auto',
+              minRows: 10,
+              minCols: 10,
+              contextMenu: true,
+              copyPaste: true,
+              fixedRowsTop: 0,
+              fixedColumnsLeft: 0,
+              licenseKey: 'non-commercial-and-evaluation'
             })
           }
 
           setLoading(false)
         }
       } catch (err) {
-        console.error('Error loading Excel with Luckysheet:', err)
+        console.error('Error loading Excel:', err)
         setError(err instanceof Error ? err.message : 'Error desconocido')
         setLoading(false)
       }
     }
 
-    initLuckysheet()
+    initHandsontable()
+
+    return () => {
+      // Cleanup
+      if (hotRef.current) {
+        hotRef.current.destroy()
+      }
+    }
   }, [projectId])
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center h-full min-h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-          <p className="text-sm text-muted-foreground">Cargando archivo...</p>
+          <p className="text-sm text-muted-foreground">Cargando archivo editable...</p>
         </div>
       </div>
     )
@@ -139,7 +120,7 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center h-full min-h-96">
         <div className="text-center">
           <p className="text-destructive mb-2 text-sm">Error al cargar el archivo</p>
           <p className="text-xs text-muted-foreground">{error}</p>
@@ -151,8 +132,11 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
   return (
     <div
       ref={containerRef}
-      className="w-full bg-card border border-border rounded"
-      style={{ minHeight: '500px' }}
+      className="w-full overflow-auto bg-white rounded"
+      style={{ 
+        minHeight: '500px',
+        maxHeight: 'calc(100vh - 200px)'
+      }}
     />
   )
 }
