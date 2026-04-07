@@ -45,10 +45,8 @@ export function ProjectLoginForm({ projectId }: { projectId: number }) {
         return
       }
 
-      // Esperar un poco para asegurar que la cookie se haya establecido
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Recargar la página completamente para que el servidor lea la nueva sesión
+      // El servidor ya estableció la cookie en la respuesta
+      // Hacer un hard refresh para asegurar que se envíe la cookie en la siguiente solicitud
       window.location.href = `/proyectos/${projectId}`
     } catch (error) {
       setError('Error de conexión: ' + (error instanceof Error ? error.message : 'desconocido'))
