@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { HotTable } from '@handsontable/react'
-import 'handsontable/dist/handsontable.full.min.css'
 
 interface ExcelPreviewInlineProps {
   projectId: number
@@ -13,6 +12,15 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<any[]>([])
   const hotTableRef = useRef(null)
+
+  // Inject Handsontable CSS dynamically
+  useEffect(() => {
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = 'https://cdn.jsdelivr.net/npm/handsontable@16.2.0/dist/handsontable.full.min.css'
+    document.head.appendChild(link)
+    return () => link.remove()
+  }, [])
 
   useEffect(() => {
     async function loadExcel() {
