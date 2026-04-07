@@ -42,9 +42,8 @@ export default async function PreviewPage({
     )
   }
 
-  // Generate Google Sheets Viewer URL
-  const blobUrl = `https://blob.vercelusercontent.com/${submission.file_pathname}`
-  const viewerUrl = `https://docs.google.com/gviz/embed?url=${encodeURIComponent(blobUrl)}`
+  // Use Microsoft Office Online Viewer with our API endpoint
+  const viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(`${process.env.NEXT_PUBLIC_APP_URL || 'https://fecti-beneficiarios-2025.vercel.app'}/api/admin/download?projectId=${projectId}`)}`
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -70,7 +69,7 @@ export default async function PreviewPage({
           src={viewerUrl}
           className="w-full h-full border-0"
           title="Vista previa del archivo"
-          sandbox="allow-same-origin allow-scripts allow-popups"
+          sandbox="allow-same-origin allow-scripts allow-popups allow-top-navigation-by-user-activation"
         />
       </div>
     </div>
