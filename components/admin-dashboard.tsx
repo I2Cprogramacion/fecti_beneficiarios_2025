@@ -317,7 +317,7 @@ export function AdminDashboard({
                         {p.submitted && (
                           <>
                             <a
-                              href={`/api/admin/preview?projectId=${p.id}`}
+                              href={`/admin/preview/${p.id}`}
                               className="text-xs text-accent hover:underline"
                               title="Ver archivo en el navegador"
                               target="_blank"
