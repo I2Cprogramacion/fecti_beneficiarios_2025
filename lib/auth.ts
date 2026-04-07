@@ -12,20 +12,29 @@ export interface SessionUser {
 export async function getSession(): Promise<SessionUser | null> {
   const cookieStore = await cookies()
   const raw = cookieStore.get('session')?.value
+  console.log('🔍 getSession() - Cookie raw value:', raw ? raw.substring(0, 50) + '...' : 'NOT FOUND')
   if (!raw) return null
   try {
     const data = JSON.parse(Buffer.from(raw, 'base64').toString('utf8'))
+    console.log('🔍 getSession() - Parsed cookie data:', data)
     const rows = await sql`SELECT id, email, role, project_id, must_change_password FROM users WHERE id = ${data.id}`
-    if (!rows.length) return null
+    console.log('🔍 getSession() - DB lookup result:', rows)
+    if (!rows.length) {
+      console.log('🔍 getSession() - User not found in DB!')
+      return null
+    }
     const u = rows[0]
-    return {
+    const session = {
       id: u.id,
       email: u.email,
       role: u.role,
       projectId: u.project_id,
       mustChangePassword: u.must_change_password,
     }
-  } catch {
+    console.log('🔍 getSession() - Returning session:', session)
+    return session
+  } catch (error) {
+    console.log('🔍 getSession() - Error:', error)
     return null
   }
 }

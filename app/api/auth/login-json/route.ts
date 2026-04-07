@@ -28,8 +28,11 @@ export async function POST(req: NextRequest) {
     }
 
     const user = rows[0]
+    console.log('🔐 Login attempt - User found:', { id: user.id, email: user.email, role: user.role, project_id: user.project_id })
+    
     const valid = await bcrypt.compare(password, user.password_hash)
     if (!valid) {
+      console.log('🔐 Login attempt - Invalid password')
       return NextResponse.json(
         { error: 'Correo o contraseña incorrectos' },
         { status: 401 }
@@ -44,7 +47,10 @@ export async function POST(req: NextRequest) {
       mustChangePassword: user.must_change_password,
     }
 
+    console.log('🔐 Login attempt - Session user object:', sessionUser)
+
     const cookie = makeSessionCookie(sessionUser)
+    console.log('🔐 Login attempt - Cookie created:', cookie.substring(0, 50) + '...')
     
     // Determine redirect URL based on role
     let redirectUrl = '/dashboard'
@@ -53,6 +59,8 @@ export async function POST(req: NextRequest) {
     } else if (user.role === 'beneficiary' && user.project_id) {
       redirectUrl = `/proyectos/${user.project_id}`
     }
+    
+    console.log('🔐 Login attempt - Redirect URL:', redirectUrl)
     
     const response = NextResponse.json({
       ok: true,

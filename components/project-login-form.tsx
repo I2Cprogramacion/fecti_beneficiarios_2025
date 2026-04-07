@@ -45,9 +45,11 @@ export function ProjectLoginForm({ projectId }: { projectId: number }) {
         return
       }
 
-      // Redirect usando el URL retornado del servidor
-      const redirectUrl = data.redirectUrl || `/proyectos/${projectId}`
-      router.push(redirectUrl)
+      // Esperar un poco para asegurar que la cookie se haya establecido
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // Recargar la página completamente para que el servidor lea la nueva sesión
+      window.location.href = `/proyectos/${projectId}`
     } catch (error) {
       setError('Error de conexión: ' + (error instanceof Error ? error.message : 'desconocido'))
     } finally {

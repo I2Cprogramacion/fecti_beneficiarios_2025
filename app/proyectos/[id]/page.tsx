@@ -55,6 +55,13 @@ export default async function ProjectPage({
 
   if (!project) notFound()
 
+  // Debug logging
+  console.log('📍 ProjectPage Debug:')
+  console.log('  Project ID from URL:', id, 'Type:', typeof id)
+  console.log('  Project from DB:', { id: project.id, num: project.num })
+  console.log('  Session:', session)
+  console.log('  Comparison: session?.projectId === project.id?', session?.projectId, '===', project.id, '?', session?.projectId === project.id)
+
   const isOwner = session && session.role === 'beneficiary' && session.projectId === project.id
 
   return (
