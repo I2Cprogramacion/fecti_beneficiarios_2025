@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import Link from 'next/link'
-import { ExcelPreviewClient } from '@/components/excel-preview-client'
+import { ExcelPreviewPage } from '@/components/excel-preview-page'
 
 async function getSubmission(projectId: string) {
   try {
@@ -62,7 +62,7 @@ export default async function PreviewPage({
       </div>
 
       {/* Viewer */}
-      <ExcelPreviewClient projectId={projectId} />
+      <ExcelPreviewPage projectId={projectId} />
     </div>
   )
 }
