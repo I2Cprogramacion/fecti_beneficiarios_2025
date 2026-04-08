@@ -86,7 +86,8 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
               data: data || [],
               rowHeaders: true,
               colHeaders: true,
-              height: 'auto',
+              height: '100%',
+              width: '100%',
               minRows: 10,
               minCols: 10,
               contextMenu: [

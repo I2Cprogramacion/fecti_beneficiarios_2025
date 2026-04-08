@@ -501,21 +501,13 @@ export function AdminDashboard({
               <h1 className="text-xl font-bold">{previewModal.clave}</h1>
               <p className="text-sm opacity-75">{previewModal.titulo}</p>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setPreviewModal(null)}
-                className="text-white hover:bg-white/20 px-4 py-2 rounded transition-colors text-sm font-medium"
-              >
-                Volver
-              </button>
-              <button
-                onClick={() => setPreviewModal(null)}
-                className="text-white hover:bg-white/20 p-2 rounded transition-colors"
-                title="Cerrar"
-              >
-                ✕
-              </button>
-            </div>
+            <button
+              onClick={() => setPreviewModal(null)}
+              className="text-white hover:bg-white/20 p-2 rounded transition-colors"
+              title="Cerrar"
+            >
+              ✕
+            </button>
           </div>
 
           {/* Content */}
