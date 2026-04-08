@@ -492,16 +492,22 @@ export function AdminDashboard({
         </div>
       )}
 
-      {/* Excel Preview Modal */}
+      {/* Excel Preview Fullscreen Overlay */}
       {previewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-2 py-2 overflow-hidden">
-          <div className="bg-card border border-border rounded-lg shadow-2xl w-full flex flex-col" style={{ aspectRatio: '16 / 9', maxHeight: '90vh' }}>
-            {/* Modal Header */}
-            <div className="bg-primary text-primary-foreground p-4 flex-shrink-0 border-b border-border flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold">{previewModal.clave}</h3>
-                <p className="text-xs opacity-75">{previewModal.titulo}</p>
-              </div>
+        <div className="fixed inset-0 z-50 bg-background flex flex-col">
+          {/* Header */}
+          <div className="bg-primary text-primary-foreground p-4 flex-shrink-0 border-b border-border flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold">{previewModal.clave}</h1>
+              <p className="text-sm opacity-75">{previewModal.titulo}</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPreviewModal(null)}
+                className="text-white hover:bg-white/20 px-4 py-2 rounded transition-colors text-sm font-medium"
+              >
+                Volver
+              </button>
               <button
                 onClick={() => setPreviewModal(null)}
                 className="text-white hover:bg-white/20 p-2 rounded transition-colors"
@@ -510,11 +516,11 @@ export function AdminDashboard({
                 ✕
               </button>
             </div>
+          </div>
 
-            {/* Modal Content - Excel Preview */}
-            <div className="flex-1 overflow-auto w-full">
-              <ExcelPreviewInline projectId={previewModal.id} />
-            </div>
+          {/* Content */}
+          <div className="flex-1 overflow-hidden">
+            <ExcelPreviewInline projectId={previewModal.id} />
           </div>
         </div>
       )}

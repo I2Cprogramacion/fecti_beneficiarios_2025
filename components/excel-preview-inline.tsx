@@ -162,10 +162,6 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
     <div
       ref={containerRef}
       className="w-full h-full bg-white"
-      style={{ 
-        minHeight: '100%',
-        minWidth: '100%'
-      }}
     />
   )
 }
