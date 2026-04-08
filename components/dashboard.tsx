@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { SessionUser } from '@/lib/auth'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 
 interface Project {
   id: number
@@ -44,34 +42,43 @@ export default function Dashboard({ session }: { session: SessionUser }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-background font-sans">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-slate-900">FECTI Dashboard</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-600">{session.email}</span>
+      <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-accent flex items-center justify-center text-xs font-bold text-white">F</div>
+            <div>
+              <p className="text-sm font-semibold leading-tight">FECTI – Dashboard</p>
+              <p className="text-xs opacity-70 hidden sm:block">{session.email}</p>
+            </div>
+          </div>
+          <nav className="flex items-center gap-4">
             {session.role === 'admin' && (
-              <Link href="/admin">
-                <Button variant="outline" size="sm">
-                  Panel de Admin
-                </Button>
+              <Link
+                href="/admin/dashboard"
+                className="text-xs font-medium opacity-90 hover:opacity-100 transition-opacity"
+              >
+                Panel de Admin
               </Link>
             )}
-            <Button variant="outline" size="sm" onClick={handleLogout}>
+            <button
+              onClick={handleLogout}
+              className="bg-accent hover:bg-accent/90 text-white text-xs px-3 py-1.5 rounded transition-colors"
+            >
               Cerrar sesión
-            </Button>
-          </div>
+            </button>
+          </nav>
         </div>
       </header>
 
       {/* Main */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-1">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-slate-900 mb-2">
+          <h2 className="text-2xl font-bold text-foreground mb-1">
             {session.role === 'admin' ? 'Todos los proyectos' : 'Mi proyecto'}
           </h2>
-          <p className="text-slate-600">
+          <p className="text-sm text-muted-foreground">
             {session.role === 'admin'
               ? 'Visualiza y gestiona todos los proyectos FECTI'
               : 'Accede a tu proyecto y sube tus reportes'}
@@ -79,45 +86,50 @@ export default function Dashboard({ session }: { session: SessionUser }) {
         </div>
 
         {loading ? (
-          <div className="text-center py-12">
-            <p className="text-slate-600">Cargando proyectos...</p>
+          <div className="text-center py-16">
+            <div className="inline-block w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mb-3" />
+            <p className="text-sm text-muted-foreground">Cargando proyectos...</p>
           </div>
         ) : projects.length === 0 ? (
-          <Card className="p-12 text-center">
-            <p className="text-slate-600 mb-4">No hay proyectos disponibles</p>
-          </Card>
+          <div className="bg-card border border-border rounded-xl p-12 text-center shadow-sm">
+            <p className="text-muted-foreground">No hay proyectos disponibles</p>
+          </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {projects.map((project) => (
               <Link key={project.id} href={`/projects/${project.id}`}>
-                <Card className="p-6 hover:shadow-lg transition cursor-pointer h-full">
-                  <h3 className="font-bold text-lg text-slate-900 mb-2 line-clamp-2">
+                <div className="bg-card border border-border rounded-xl p-6 hover:border-primary hover:shadow-lg transition-all cursor-pointer h-full group">
+                  <h3 className="font-bold text-base text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                     {project.title}
                   </h3>
-                  <p className="text-sm text-slate-600 mb-1">
-                    <span className="font-medium">Investigador:</span> {project.principal_investigator}
+                  <p className="text-xs text-muted-foreground mb-1">
+                    <span className="font-semibold text-foreground">Investigador:</span> {project.principal_investigator}
                   </p>
-                  <p className="text-sm text-slate-600 mb-4">
-                    <span className="font-medium">Institución:</span> {project.institution}
+                  <p className="text-xs text-muted-foreground mb-4">
+                    <span className="font-semibold text-foreground">Institución:</span> {project.institution}
                   </p>
                   <div className="flex items-center justify-between">
                     <span
-                      className={`text-xs font-semibold px-2 py-1 rounded ${
+                      className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
                         project.status === 'active'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-slate-100 text-slate-800'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-secondary text-secondary-foreground'
                       }`}
                     >
                       {project.status === 'active' ? 'Activo' : 'Completado'}
                     </span>
-                    <span className="text-xs text-slate-500">ID: {project.id}</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">ID: {project.id}</span>
                   </div>
-                </Card>
+                </div>
               </Link>
             ))}
           </div>
         )}
       </main>
+
+      <footer className="border-t border-border py-4 text-center text-xs text-muted-foreground">
+        FECTI &copy; 2025 &mdash; Plataforma de seguimiento
+      </footer>
     </div>
   )
 }

@@ -85,8 +85,8 @@ export function UploadArea({ projectId, fileName, uploadedAt }: UploadAreaProps)
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
-      <h2 className="text-sm font-semibold text-foreground mb-1">Subir reporte</h2>
+    <div className="bg-card border border-border rounded-xl p-6 shadow-md">
+      <h2 className="text-base font-bold text-foreground mb-1">Subir reporte</h2>
 
       {/* Current status */}
       <div
@@ -127,12 +127,15 @@ export function UploadArea({ projectId, fileName, uploadedAt }: UploadAreaProps)
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
         onClick={() => inputRef.current?.click()}
-        className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-colors"
+        className="border-2 border-dashed border-border rounded-xl p-10 text-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-all group"
       >
-        <p className="text-sm text-muted-foreground">
+        <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-accent/20 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <p className="text-sm text-foreground font-medium">
           {fileName ? 'Haz clic o arrastra para reemplazar el archivo' : 'Haz clic o arrastra tu archivo aquí'}
         </p>
-        <p className="text-xs text-muted-foreground mt-1">Solo .xls y .xlsx</p>
+        <p className="text-xs text-muted-foreground mt-1">Formatos aceptados: .xls y .xlsx</p>
         <input
           ref={inputRef}
           type="file"
@@ -146,13 +149,22 @@ export function UploadArea({ projectId, fileName, uploadedAt }: UploadAreaProps)
       </div>
 
       {uploading && (
-        <p className="text-xs text-muted-foreground mt-3 text-center">Subiendo archivo...</p>
+        <div className="flex items-center justify-center gap-2 mt-4">
+          <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <p className="text-xs text-muted-foreground">Subiendo archivo...</p>
+        </div>
       )}
       {error && (
-        <p className="text-xs text-destructive bg-destructive/10 rounded px-3 py-2 mt-3">{error}</p>
+        <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 rounded-lg px-4 py-3 mt-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {error}
+        </div>
       )}
       {success && (
-        <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2 mt-3">{success}</p>
+        <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3 mt-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+          {success}
+        </div>
       )}
     </div>
   )
