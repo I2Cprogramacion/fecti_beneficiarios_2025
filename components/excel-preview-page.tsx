@@ -20,12 +20,34 @@ export function ExcelPreviewPage({ projectId }: ExcelPreviewPageProps) {
 
   useEffect(() => {
     let isMounted = true
-    let loadingScripts = false
 
     const initHandsontable = async () => {
       try {
+        // Wait for DOM to be ready
+        await new Promise(resolve => {
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', resolve)
+          } else {
+            resolve(undefined)
+          }
+        })
+
+        if (!isMounted) return
+
         setLoading(true)
         setError(null)
+
+        // Ensure container exists
+        if (!containerRef.current) {
+          console.log('Container ref not available, waiting...')
+          await new Promise(resolve => setTimeout(resolve, 100))
+        }
+
+        if (!containerRef.current) {
+          throw new Error('Container element not found in DOM')
+        }
+
+        console.log('Container found:', containerRef.current)
 
         // Step 1: Ensure CSS is loaded
         if (!document.getElementById('handsontable-css')) {
@@ -37,8 +59,8 @@ export function ExcelPreviewPage({ projectId }: ExcelPreviewPageProps) {
         }
 
         // Step 2: Ensure JS is loaded
-        if (typeof window.Handsontable === 'undefined' && !loadingScripts) {
-          loadingScripts = true
+        if (typeof window.Handsontable === 'undefined') {
+          console.log('Loading Handsontable script...')
           
           await new Promise<void>((resolve, reject) => {
             const script = document.createElement('script')
@@ -95,8 +117,10 @@ export function ExcelPreviewPage({ projectId }: ExcelPreviewPageProps) {
 
         // Step 5: Initialize Handsontable
         console.log('Initializing Handsontable...')
+        
+        // Double check container
         if (!containerRef.current) {
-          throw new Error('Container not available')
+          throw new Error('Container element lost during initialization')
         }
 
         if (typeof window.Handsontable !== 'function') {
@@ -154,10 +178,14 @@ export function ExcelPreviewPage({ projectId }: ExcelPreviewPageProps) {
       }
     }
 
-    initHandsontable()
+    // Use requestAnimationFrame to ensure DOM is ready
+    const frameId = requestAnimationFrame(() => {
+      initHandsontable()
+    })
 
     return () => {
       isMounted = false
+      cancelAnimationFrame(frameId)
       if (hotRef.current) {
         try {
           hotRef.current.destroy()
