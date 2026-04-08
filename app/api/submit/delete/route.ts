@@ -21,8 +21,7 @@ export async function DELETE(req: NextRequest) {
     if (existing[0].file_pathname) {
       try {
         await del(existing[0].file_pathname)
-      } catch (e) {
-        console.error('Error deleting blob:', e)
+      } catch {
         // Continue even if blob deletion fails
       }
     }

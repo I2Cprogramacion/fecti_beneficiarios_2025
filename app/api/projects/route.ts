@@ -25,8 +25,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(rows)
-  } catch (error) {
-    console.error('Error fetching projects:', error)
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 })
   }
 }

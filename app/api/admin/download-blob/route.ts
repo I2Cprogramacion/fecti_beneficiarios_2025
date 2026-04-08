@@ -37,8 +37,7 @@ export async function GET(request: NextRequest) {
       fileName: file_name,
       contentType: result.blob.contentType,
     })
-  } catch (error) {
-    console.error('Error downloading blob:', error)
+  } catch {
     return NextResponse.json({ error: 'Error al descargar archivo.' }, { status: 500 })
   }
 }

@@ -1,13 +1,20 @@
 import { neon } from '@neondatabase/serverless'
 import bcrypt from 'bcryptjs'
 import { NextRequest, NextResponse } from 'next/server'
-
-// This endpoint should be called with proper authentication
-// It recreates the database schema and seeds the projects
+import { getSession } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
-  // No auth check - allow any POST request
-  console.log('Migration endpoint called')
+  // Require admin session
+  const session = await getSession()
+  if (!session || session.role !== 'admin') {
+    return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })
+  }
+
+  // Require MIGRATION_KEY header as second factor
+  const key = request.headers.get('x-migration-key')
+  if (!process.env.MIGRATION_KEY || key !== process.env.MIGRATION_KEY) {
+    return NextResponse.json({ error: 'Clave de migración inválida.' }, { status: 403 })
+  }
 
   if (!process.env.DATABASE_URL) {
     return NextResponse.json({ error: 'DATABASE_URL not configured' }, { status: 500 })
@@ -16,7 +23,6 @@ export async function POST(request: NextRequest) {
   const sql = neon(process.env.DATABASE_URL)
 
   try {
-    console.log('Starting migration...')
 
     // Drop tables if they exist
     await sql`DROP TABLE IF EXISTS submissions`
@@ -67,7 +73,7 @@ export async function POST(request: NextRequest) {
       )
     `
 
-    console.log('Tables created.')
+
 
     // Create admin users
     const hash = await bcrypt.hash('12345', 10)
@@ -81,7 +87,7 @@ export async function POST(request: NextRequest) {
       VALUES ('fernando.pacheco@i2c.com.mx', ${hash}, 'admin', true)
     `
 
-    console.log('Admin users created.')
+
 
     // Seed projects
     const projects = [
@@ -157,17 +163,15 @@ export async function POST(request: NextRequest) {
     }
 
     const count = await sql`SELECT COUNT(*) as total FROM projects`
-    console.log(`Seeded ${count[0].total} projects`)
 
     return NextResponse.json({
       success: true,
-      message: 'Database migration completed successfully',
+      message: 'Migración completada.',
       projectsCount: count[0].total,
     })
-  } catch (error) {
-    console.error('Migration error:', error)
+  } catch {
     return NextResponse.json(
-      { error: 'Migration failed', details: String(error) },
+      { error: 'Error en la migración.' },
       { status: 500 }
     )
   }

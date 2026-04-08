@@ -33,9 +33,13 @@ export function ExcelPreviewClient({ projectId }: ExcelPreviewClientProps) {
         const firstSheetName = workbook.SheetNames[0]
         const worksheet = workbook.Sheets[firstSheetName]
         
-        // Convert to HTML
-        const html = XLSX.utils.sheet_to_html(worksheet)
-        setTableHtml(html)
+        // Convert to HTML and sanitize
+        const rawHtml = XLSX.utils.sheet_to_html(worksheet)
+        // Strip <script> tags and on* event handlers to prevent XSS
+        const sanitized = rawHtml
+          .replace(/<script[\s\S]*?<\/script>/gi, '')
+          .replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '')
+        setTableHtml(sanitized)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error desconocido')
       } finally {

@@ -1,8 +1,21 @@
 import { neon } from '@neondatabase/serverless'
 import bcrypt from 'bcryptjs'
 import { NextRequest, NextResponse } from 'next/server'
+import { getSession } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
+  // Require admin session
+  const session = await getSession()
+  if (!session || session.role !== 'admin') {
+    return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })
+  }
+
+  // Require MIGRATION_KEY header as second factor
+  const key = request.headers.get('x-migration-key')
+  if (!process.env.MIGRATION_KEY || key !== process.env.MIGRATION_KEY) {
+    return NextResponse.json({ error: 'Clave de migración inválida.' }, { status: 403 })
+  }
+
   if (!process.env.DATABASE_URL) {
     return NextResponse.json({ error: 'DATABASE_URL not configured' }, { status: 500 })
   }
@@ -10,14 +23,13 @@ export async function POST(request: NextRequest) {
   const sql = neon(process.env.DATABASE_URL)
 
   try {
-    console.log('[MIGRATION] Starting migration...')
 
     // Drop tables if they exist
     await sql`DROP TABLE IF EXISTS submissions`
     await sql`DROP TABLE IF EXISTS users`
     await sql`DROP TABLE IF EXISTS projects`
     await sql`DROP TABLE IF EXISTS settings`
-    console.log('[MIGRATION] Dropped existing tables')
+
 
     // Create tables
     await sql`
@@ -62,7 +74,7 @@ export async function POST(request: NextRequest) {
       )
     `
 
-    console.log('[MIGRATION] Created tables')
+
 
     // Create admin users
     const hash = await bcrypt.hash('12345', 10)
@@ -76,7 +88,7 @@ export async function POST(request: NextRequest) {
       VALUES ('fernando.pacheco@i2c.com.mx', ${hash}, 'admin', true)
     `
 
-    console.log('[MIGRATION] Created admin users')
+
 
     // Seed projects
     const projects = [
@@ -152,22 +164,15 @@ export async function POST(request: NextRequest) {
     }
 
     const count = await sql`SELECT COUNT(*) as total FROM projects`
-    console.log(`[MIGRATION] Seeded ${count[0].total} projects`)
 
     return NextResponse.json({
       success: true,
-      message: 'Database migration completed successfully',
+      message: 'Migración completada.',
       projectsCount: count[0].total,
-      timestamp: new Date().toISOString(),
     })
-  } catch (error) {
-    console.error('[MIGRATION] Error:', error)
+  } catch {
     return NextResponse.json(
-      { 
-        error: 'Migration failed', 
-        details: error instanceof Error ? error.message : String(error),
-        timestamp: new Date().toISOString(),
-      },
+      { error: 'Error en la migración.' },
       { status: 500 }
     )
   }

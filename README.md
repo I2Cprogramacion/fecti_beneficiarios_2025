@@ -1,35 +1,101 @@
-# FECTI-BENEFICIARIOS-2025
+# FECTI Beneficiarios 2025
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+Plataforma de reporteo para beneficiarios del **Fondo Estatal de Ciencia, Tecnología e Innovación (FECTI) 2025**, operada por el **Instituto de Innovación y Competitividad (I2C)** del Gobierno del Estado de Chihuahua.
 
-## Built with v0
+## Descripción
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+Sistema web que permite a los beneficiarios de los 62 proyectos aprobados del FECTI 2025 subir sus reportes financieros en formato Excel, y a los administradores del I2C revisar, descargar y dar seguimiento al avance de entrega por componente.
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_Np4GGhwzWpFqFf67SeBSxIM7Mc1i)
+### Componentes del FECTI
 
-## Getting Started
+| Clave | Componente | Proyectos |
+|-------|-----------|-----------|
+| C01-INFRA | Infraestructura | 15 |
+| C02-IBA | Investigación Básica y Aplicada | 15 |
+| C03-FT | Formación de Talento | 12 |
+| C04-IYE | Innovación y Emprendimiento | 20 |
 
-First, run the development server:
+### Funcionalidades
+
+- **Panel de administración** — Gestión de usuarios beneficiarios, asignación de credenciales, descarga de archivos, vista previa de Excel en línea, métricas de avance.
+- **Portal de beneficiarios** — Login por proyecto, carga de archivo Excel (.xls/.xlsx), reemplazo de entregas previas.
+- **Métricas** — Dashboard con gráficas de dona, barras horizontales y tablas por componente: tasa de entrega, montos, actividad reciente.
+- **Gestión de administradores** — Crear y eliminar cuentas admin (restringido al superadmin).
+
+## Stack técnico
+
+| Capa | Tecnología |
+|------|-----------|
+| Framework | [Next.js](https://nextjs.org) 16 (App Router, Turbopack) |
+| Base de datos | [Neon](https://neon.tech) PostgreSQL (serverless) |
+| Almacenamiento | [Vercel Blob](https://vercel.com/docs/storage/vercel-blob) (privado) |
+| Autenticación | Cookies HTTP-only firmadas con HMAC-SHA256 |
+| Hashing | bcryptjs (cost 10–12) |
+| UI | Tailwind CSS + Radix UI + componentes shadcn/ui |
+| Excel preview | [Handsontable](https://handsontable.com) v12.4.0 (CDN) |
+| Deploy | [Vercel](https://vercel.com) |
+
+## Requisitos previos
+
+- Node.js ≥ 18
+- pnpm (recomendado) o npm
+- Cuenta en Neon (PostgreSQL)
+- Cuenta en Vercel (Blob Storage + Deploy)
+
+## Instalación local
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+git clone https://github.com/I2Cprogramacion/FECTI-BENEFICIARIOS-2025.git
+cd FECTI-BENEFICIARIOS-2025
+pnpm install
+```
+
+## Variables de entorno
+
+Crea un archivo `.env.local` en la raíz del proyecto:
+
+```env
+DATABASE_URL=postgresql://...          # Connection string de Neon
+SESSION_SECRET=<hex-64-chars>          # Secreto HMAC para firmar cookies de sesión
+MIGRATION_KEY=<clave-secreta>          # Clave requerida para ejecutar migraciones
+BLOB_READ_WRITE_TOKEN=vercel_blob_...  # Token de Vercel Blob (se configura automáticamente en Vercel)
+```
+
+> **Importante:** Estas mismas variables deben estar configuradas en **Vercel → Settings → Environment Variables**.
+
+## Ejecución
+
+```bash
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Estructura del proyecto
 
-## Learn More
+```
+app/
+  admin/         → Páginas del panel administrativo
+  api/           → API Routes (auth, archivos, admin, métricas)
+  login/         → Página de login genérica
+  proyectos/     → Páginas de proyectos para beneficiarios
+components/      → Componentes React (dashboard, formularios, UI)
+lib/
+  auth.ts        → Sesiones firmadas con HMAC-SHA256
+  db.ts          → Conexión lazy a Neon PostgreSQL
+  rate-limit.ts  → Rate limiter in-memory para login
+  utils.ts       → Utilidades generales
+```
 
-To learn more, take a look at the following resources:
+## Seguridad
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+- Cookies de sesión firmadas con HMAC-SHA256 (`crypto.timingSafeEqual`)
+- Rate limiting (10 intentos/min por IP) en endpoints de login
+- Validación de propiedad de archivos (IDOR protection)
+- Endpoints de migración protegidos con sesión admin + clave secreta
+- Errores sanitizados — sin filtración de información interna
+- Flags de cookie: `httpOnly`, `secure`, `sameSite`, `maxAge: 8h`
 
-<a href="https://v0.app/chat/api/kiro/clone/I2Cprogramacion/FECTI-BENEFICIARIOS-2025" alt="Open in Kiro"><img src="https://pdgvvgmkdvyeydso.public.blob.vercel-storage.com/open%20in%20kiro.svg?sanitize=true" /></a>
+## Licencia
+
+[BSD 3-Clause](LICENSE) — Copyright © 2025 Gobierno del Estado de Chihuahua, Instituto de Innovación y Competitividad (I2C).

@@ -5,8 +5,7 @@ export async function GET() {
   try {
     const session = await getSession()
     return NextResponse.json(session)
-  } catch (error) {
-    console.error('Session error:', error)
+  } catch {
     return NextResponse.json(null)
   }
 }
