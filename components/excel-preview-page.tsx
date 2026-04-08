@@ -96,14 +96,26 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
 
         // Step 3: Fetch Excel file
         console.log('Fetching Excel file for projectId:', projectId)
-        const res = await fetch(`/api/admin/download?projectId=${projectId}`)
+        const res = await fetch(`/api/admin/download-blob?projectId=${projectId}`, {
+          credentials: 'include',
+        })
         if (!res.ok) {
+          const errorText = await res.text()
+          console.error('Download API error:', errorText)
           throw new Error(`HTTP ${res.status}: No se pudo descargar el archivo`)
         }
 
-        const blob = await res.blob()
-        const arrayBuffer = await blob.arrayBuffer()
-        console.log('Excel file fetched, size:', arrayBuffer.byteLength)
+        const downloadData = await res.json()
+        console.log('Excel file metadata:', { fileName: downloadData.fileName, contentType: downloadData.contentType })
+        
+        // Convert base64 back to ArrayBuffer
+        const binaryString = atob(downloadData.data)
+        const bytes = new Uint8Array(binaryString.length)
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i)
+        }
+        const arrayBuffer = bytes.buffer
+        console.log('Excel file converted, size:', arrayBuffer.byteLength)
 
         // Step 4: Parse Excel
         const { read, utils } = await import('xlsx')
