@@ -174,22 +174,28 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
 
   if (loading) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-          <p className="text-sm text-muted-foreground">Cargando...</p>
+      <>
+        <div ref={containerRef} className="w-full h-full hidden" />
+        <div className="w-full h-full flex items-center justify-center bg-background">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+            <p className="text-sm text-muted-foreground">Cargando...</p>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
   if (error) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-background">
-        <div className="text-center">
-          <p className="text-destructive text-sm mb-2">Error: {error}</p>
+      <>
+        <div ref={containerRef} className="w-full h-full hidden" />
+        <div className="w-full h-full flex items-center justify-center bg-background">
+          <div className="text-center">
+            <p className="text-destructive text-sm mb-2">Error: {error}</p>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
