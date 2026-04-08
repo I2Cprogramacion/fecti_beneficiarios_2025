@@ -5,6 +5,11 @@
 			"label": "git commit and push",
 			"type": "shell",
 			"command": "cd c:\\Users\\Soporte\\Downloads\\fecti_beneficiarios_2025 && git add -A && git commit -m \"fix: remove toolbar and clean up excel preview\" && git push"
+		},
+		{
+			"label": "git-commit",
+			"type": "shell",
+			"command": "cd c:\\Users\\Soporte\\Downloads\\fecti_beneficiarios_2025 && git add components/excel-preview-inline.tsx && git commit -m \"fix: excel preview muestra todas las columnas - container siempre montado con overlay\""
 		}
 	]
 }
