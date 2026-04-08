@@ -50,6 +50,7 @@ export function ChangePasswordForm() {
           onChange={(e) => setNewPassword(e.target.value)}
           required
           minLength={8}
+          autoComplete="new-password"
           className="w-full border border-input rounded-lg px-4 py-3 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
           placeholder="Mínimo 8 caracteres"
         />
@@ -61,6 +62,7 @@ export function ChangePasswordForm() {
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           required
+          autoComplete="new-password"
           className="w-full border border-input rounded-lg px-4 py-3 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
           placeholder="Repite la contraseña"
         />

@@ -64,6 +64,7 @@ export function ProjectLoginForm({ projectId }: { projectId: number }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          autoComplete="email"
           className="w-full border border-input rounded-lg px-4 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
           placeholder="correo@ejemplo.com"
         />
@@ -75,6 +76,7 @@ export function ProjectLoginForm({ projectId }: { projectId: number }) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          autoComplete="current-password"
           className="w-full border border-input rounded-lg px-4 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
           placeholder="••••••••"
         />

@@ -49,6 +49,7 @@ export default function LoginForm() {
           placeholder="usuario@ejemplo.com"
           required
           disabled={loading}
+          autoComplete="email"
           className="w-full border border-input rounded-lg px-4 py-3 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors disabled:opacity-50"
         />
       </div>
@@ -64,6 +65,7 @@ export default function LoginForm() {
           placeholder="••••••••"
           required
           disabled={loading}
+          autoComplete="current-password"
           className="w-full border border-input rounded-lg px-4 py-3 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors disabled:opacity-50"
         />
       </div>

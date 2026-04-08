@@ -86,6 +86,7 @@ export function CreateAdminForm() {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
               required
               disabled={loading}
+              autoComplete="off"
               className="text-sm"
             />
           </div>
@@ -99,6 +100,7 @@ export function CreateAdminForm() {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
               required
               disabled={loading}
+              autoComplete="off"
               className="text-sm"
             />
             <p className="text-[10px] text-muted-foreground mt-1">
