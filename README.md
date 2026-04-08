@@ -1,6 +1,6 @@
 # FECTI Beneficiarios 2025
 
-Plataforma de reporteo para beneficiarios del **Fondo Estatal de Ciencia, Tecnología e Innovación (FECTI) 2025**, operada por el **Instituto de Innovación y Competitividad (I2C)** del Gobierno del Estado de Chihuahua.
+Plataforma de reporteo para beneficiarios del **Fondo Estatal de Ciencia, Tecnología e Innovación (FECTI) 2025**, operada por el **Instituto de Innovación y Competitividad (IIC)** del Gobierno del Estado de Chihuahua.
 
 ## Descripción
 
