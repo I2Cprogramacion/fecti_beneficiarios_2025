@@ -23,66 +23,113 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
 
     const initHandsontable = async () => {
       try {
+        console.log('1. Starting initialization for projectId:', projectId)
+        
         if (!isMounted) return
         
         setLoading(true)
         setError(null)
 
         // Load CSS
+        console.log('2. Loading CSS...')
         if (!document.getElementById('handsontable-css')) {
           const link = document.createElement('link')
           link.id = 'handsontable-css'
           link.rel = 'stylesheet'
           link.href = 'https://cdn.jsdelivr.net/npm/handsontable@12.4.0/dist/handsontable.full.min.css'
           document.head.appendChild(link)
-          await new Promise(resolve => setTimeout(resolve, 100))
+          await new Promise(resolve => setTimeout(resolve, 200))
         }
+        console.log('3. CSS loaded')
 
         // Load JS
+        console.log('4. Checking if Handsontable is loaded:', typeof window.Handsontable)
         if (typeof window.Handsontable === 'undefined') {
+          console.log('5. Loading Handsontable script...')
           await new Promise<void>((resolve, reject) => {
             const script = document.createElement('script')
             script.src = 'https://cdn.jsdelivr.net/npm/handsontable@12.4.0/dist/handsontable.full.min.js'
             script.async = true
+            
             script.onload = () => {
-              setTimeout(resolve, 100)
+              console.log('6. Script loaded, waiting for library to be available')
+              setTimeout(() => {
+                console.log('7. Handsontable available:', typeof window.Handsontable)
+                resolve()
+              }, 200)
             }
-            script.onerror = () => reject(new Error('Failed to load Handsontable'))
+            script.onerror = () => {
+              console.error('Script load error')
+              reject(new Error('Failed to load Handsontable'))
+            }
             document.body.appendChild(script)
           })
+        } else {
+          console.log('8. Handsontable already loaded')
         }
 
         if (!isMounted) return
 
         // Fetch Excel
+        console.log('9. Fetching Excel file...')
         const res = await fetch(`/api/admin/download-blob?projectId=${projectId}`, {
           credentials: 'include',
         })
+        console.log('10. Response status:', res.status)
+        
         if (!res.ok) {
-          throw new Error('No se pudo descargar el archivo')
+          const errorText = await res.text()
+          console.error('API error:', errorText)
+          throw new Error(`HTTP ${res.status}: ${errorText}`)
         }
 
         const downloadData = await res.json()
+        console.log('11. Download data received, size:', downloadData.data ? downloadData.data.length : 0)
+        
         const binaryString = atob(downloadData.data)
         const bytes = new Uint8Array(binaryString.length)
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i)
         }
         const arrayBuffer = bytes.buffer
+        console.log('12. ArrayBuffer created, size:', arrayBuffer.byteLength)
 
         // Parse Excel
+        console.log('13. Importing XLSX...')
         const { read, utils } = await import('xlsx')
         const uint8Array = new Uint8Array(arrayBuffer)
         const workbook = read(uint8Array, { type: 'array' })
+        console.log('14. Workbook parsed, sheets:', workbook.SheetNames)
+        
         const firstSheetName = workbook.SheetNames[0]
         const worksheet = workbook.Sheets[firstSheetName]
         const data = utils.sheet_to_json(worksheet, { header: 1 }) as any[]
+        console.log('15. Excel data parsed, rows:', data.length)
 
-        if (!isMounted || !containerRef.current) return
+        if (!isMounted) {
+          console.log('Component unmounted, aborting')
+          return
+        }
 
-        // Initialize Handsontable
+        if (!containerRef.current) {
+          console.error('Container ref is null!')
+          throw new Error('Container reference not found')
+        }
+
+        console.log('16. Container found, initializing Handsontable...')
+        console.log('17. Container dimensions:', {
+          width: containerRef.current.clientWidth,
+          height: containerRef.current.clientHeight,
+        })
+        
         containerRef.current.innerHTML = ''
         
+        if (typeof window.Handsontable !== 'function') {
+          console.error('Handsontable is not a function:', typeof window.Handsontable)
+          throw new Error('Handsontable initialization failed')
+        }
+
+        console.log('18. Creating Handsontable instance...')
         hotRef.current = new window.Handsontable(containerRef.current, {
           data: data || [],
           rowHeaders: true,
@@ -95,14 +142,17 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
           copyPaste: true,
           licenseKey: 'non-commercial-and-evaluation',
         })
+        console.log('19. Handsontable instance created successfully')
 
         if (isMounted) {
           setLoading(false)
+          console.log('20. Loading complete')
         }
       } catch (err) {
-        console.error('Error:', err)
+        console.error('Error during init:', err)
         if (isMounted) {
-          setError(err instanceof Error ? err.message : 'Error desconocido')
+          const errorMsg = err instanceof Error ? err.message : String(err)
+          setError(errorMsg)
           setLoading(false)
         }
       }
