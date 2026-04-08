@@ -1,0 +1,10 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "git commit and push",
+			"type": "shell",
+			"command": "cd c:\\Users\\Soporte\\Downloads\\fecti_beneficiarios_2025 && git add -A && git commit -m \"fix: remove toolbar and clean up excel preview\" && git push"
+		}
+	]
+}

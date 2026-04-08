@@ -30,27 +30,6 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
     }
   }
 
-  const handleCut = () => {
-    document.execCommand('cut')
-  }
-
-  const handleCopy = () => {
-    document.execCommand('copy')
-  }
-
-  const handlePaste = () => {
-    document.execCommand('paste')
-  }
-
-  const handleClear = () => {
-    if (hotRef.current) {
-      const selected = hotRef.current.getSelected()
-      if (selected) {
-        hotRef.current.setDataAtCell(selected[0][0], selected[0][1], '')
-      }
-    }
-  }
-
   useEffect(() => {
     let isMounted = true
 
@@ -245,68 +224,8 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* Toolbar */}
-      <div className="bg-secondary border-b border-border p-2 flex items-center gap-0.5 flex-shrink-0 overflow-x-auto">
-        {/* Undo/Redo */}
-        <button
-          onClick={handleUndo}
-          className="p-2 hover:bg-secondary-foreground/20 rounded transition-colors text-sm"
-          title="Deshacer (Ctrl+Z)"
-        >
-          ↶
-        </button>
-        <button
-          onClick={handleRedo}
-          className="p-2 hover:bg-secondary-foreground/20 rounded transition-colors text-sm"
-          title="Rehacer (Ctrl+Y)"
-        >
-          ↷
-        </button>
-        
-        <div className="w-px h-6 bg-border mx-0.5"></div>
-
-        {/* Cut/Copy/Paste */}
-        <button
-          onClick={handleCut}
-          className="p-2 hover:bg-secondary-foreground/20 rounded transition-colors text-sm"
-          title="Cortar (Ctrl+X)"
-        >
-          ✂
-        </button>
-        <button
-          onClick={handleCopy}
-          className="p-2 hover:bg-secondary-foreground/20 rounded transition-colors text-sm"
-          title="Copiar (Ctrl+C)"
-        >
-          📋
-        </button>
-        <button
-          onClick={handlePaste}
-          className="p-2 hover:bg-secondary-foreground/20 rounded transition-colors text-sm"
-          title="Pegar (Ctrl+V)"
-        >
-          📌
-        </button>
-
-        <div className="w-px h-6 bg-border mx-0.5"></div>
-
-        {/* Clear */}
-        <button
-          onClick={handleClear}
-          className="p-2 hover:bg-secondary-foreground/20 rounded transition-colors text-sm"
-          title="Borrar contenido"
-        >
-          ⌫
-        </button>
-
-        <div className="w-px h-6 bg-border mx-0.5"></div>
-
-        {/* Info */}
-        <span className="text-xs text-muted-foreground px-2 whitespace-nowrap">Edición en tiempo real • Ctrl+Z/Y • Ctrl+X/C/V</span>
-      </div>
-
       {/* Excel Container */}
-      <div ref={containerRef} className="flex-1 w-full block overflow-hidden" style={{ position: 'relative' }} />
+      <div ref={containerRef} className="w-full h-full block overflow-hidden" style={{ position: 'relative' }} />
     </div>
   )
 }

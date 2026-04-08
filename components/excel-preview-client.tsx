@@ -69,16 +69,18 @@ export function ExcelPreviewClient({ projectId }: ExcelPreviewClientProps) {
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-background p-4">
-      <div className="bg-card border border-border rounded-lg shadow-sm p-4 inline-block min-w-full">
-        <div 
-          dangerouslySetInnerHTML={{ __html: tableHtml }}
-          className="text-sm"
-          style={{
-            fontSize: '0.875rem',
-            lineHeight: '1.25rem',
-          }}
-        />
+    <div className="flex-1 overflow-hidden flex flex-col bg-background">
+      <div className="flex-1 overflow-auto">
+        <div className="bg-card border border-border rounded-lg shadow-sm p-4 inline-block min-w-full">
+          <div 
+            dangerouslySetInnerHTML={{ __html: tableHtml }}
+            className="text-sm"
+            style={{
+              fontSize: '0.875rem',
+              lineHeight: '1.25rem',
+            }}
+          />
+        </div>
       </div>
     </div>
   )
