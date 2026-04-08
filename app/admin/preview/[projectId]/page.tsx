@@ -1,43 +1,58 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import { ExcelPreviewPage } from '@/components/excel-preview-page'
 import { CloseButton } from '@/components/close-button'
-import { useParams } from 'next/navigation'
 
 interface Submission {
   clave: string
   titulo: string
-  file_pathname: string
 }
 
 export default function PreviewPage() {
   const params = useParams()
-  const projectId = params.projectId as string
+  const projectId = typeof params?.projectId === 'string' ? params.projectId : ''
+  
   const [submission, setSubmission] = useState<Submission | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!projectId) {
+      setError('No project ID provided')
+      setLoading(false)
+      return
+    }
+
     const fetchSubmission = async () => {
       try {
         setLoading(true)
-        const res = await fetch(`/api/admin/download?projectId=${projectId}&metadata=true`)
+        setError(null)
+
+        console.log('Fetching submission for projectId:', projectId)
+
+        const res = await fetch(`/api/admin/submission?projectId=${projectId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        })
+
+        console.log('Submission API response status:', res.status)
         
         if (!res.ok) {
-          throw new Error('No se pudo obtener el archivo')
+          const errorData = await res.text()
+          console.error('API error:', errorData)
+          throw new Error(`HTTP ${res.status}`)
         }
 
-        // Try to get submission data from the response headers or from an API call
-        const submissionRes = await fetch(`/api/admin/submission?projectId=${projectId}`)
-        if (!submissionRes.ok) {
-          throw new Error('No se pudo obtener los datos de la presentación')
-        }
-
-        const data = await submissionRes.json()
+        const data = await res.json()
+        console.log('Submission data:', data)
         setSubmission(data)
       } catch (err) {
-        console.error('Error:', err)
+        console.error('Error fetching submission:', err)
         setError(err instanceof Error ? err.message : 'Error desconocido')
       } finally {
         setLoading(false)
@@ -46,6 +61,16 @@ export default function PreviewPage() {
 
     fetchSubmission()
   }, [projectId])
+
+  if (!projectId) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive">No hay proyecto especificado</p>
+        </div>
+      </div>
+    )
+  }
 
   if (loading) {
     return (
@@ -58,12 +83,24 @@ export default function PreviewPage() {
     )
   }
 
-  if (error || !submission) {
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-2">Error al cargar</h1>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <CloseButton />
+        </div>
+      </div>
+    )
+  }
+
+  if (!submission) {
     return (
       <div className="min-h-screen bg-background p-6 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-2">Archivo no encontrado</h1>
-          <p className="text-muted-foreground mb-4">{error || 'No hay archivo subido para este proyecto'}</p>
+          <p className="text-muted-foreground mb-4">No hay archivo subido para este proyecto</p>
           <CloseButton />
         </div>
       </div>
