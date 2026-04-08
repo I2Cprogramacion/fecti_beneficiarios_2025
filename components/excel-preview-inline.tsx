@@ -141,12 +141,23 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
           contextMenu: true,
           copyPaste: true,
           licenseKey: 'non-commercial-and-evaluation',
+          autoColumnSize: {
+            samplingRatio: 23,
+          },
         })
         console.log('19. Handsontable instance created successfully')
+        
+        // Force resize and recalculation
+        setTimeout(() => {
+          console.log('20. Forcing resize...')
+          if (hotRef.current) {
+            hotRef.current.updateSettings({})
+          }
+        }, 100)
 
         if (isMounted) {
           setLoading(false)
-          console.log('20. Loading complete')
+          console.log('21. Loading complete')
         }
       } catch (err) {
         console.error('Error during init:', err)
