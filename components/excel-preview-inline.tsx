@@ -29,14 +29,14 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
           const link = document.createElement('link')
           link.id = 'handsontable-css'
           link.rel = 'stylesheet'
-          link.href = 'https://cdn.jsdelivr.net/npm/handsontable@16.0.0/dist/handsontable.full.min.css'
+          link.href = 'https://cdn.jsdelivr.net/npm/handsontable@12.4.0/dist/handsontable.full.min.css'
           document.head.appendChild(link)
         }
 
         // Load Handsontable JS
         if (typeof window.Handsontable === 'undefined') {
           const script = document.createElement('script')
-          script.src = 'https://cdn.jsdelivr.net/npm/handsontable@16.0.0/dist/handsontable.full.min.js'
+          script.src = 'https://cdn.jsdelivr.net/npm/handsontable@12.4.0/dist/handsontable.full.min.js'
           script.async = true
           script.onload = async () => {
             await loadExcelData()
@@ -47,14 +47,23 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
         }
 
         async function loadExcelData() {
-          // Fetch the Excel file
-          const res = await fetch(`/api/admin/download?projectId=${projectId}`)
+          // Fetch the Excel file using base64 endpoint
+          const res = await fetch(`/api/admin/download-blob?projectId=${projectId}`, {
+            credentials: 'include',
+          })
           if (!res.ok) {
             throw new Error('No se pudo descargar el archivo')
           }
 
-          const blob = await res.blob()
-          const arrayBuffer = await blob.arrayBuffer()
+          const downloadData = await res.json()
+          
+          // Convert base64 back to ArrayBuffer
+          const binaryString = atob(downloadData.data)
+          const bytes = new Uint8Array(binaryString.length)
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i)
+          }
+          const arrayBuffer = bytes.buffer
 
           // Import XLSX to parse the file
           const { read, utils } = await import('xlsx')
@@ -80,11 +89,31 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
               height: 'auto',
               minRows: 10,
               minCols: 10,
-              contextMenu: true,
+              contextMenu: [
+                'row_above',
+                'row_below',
+                'hsep_above',
+                'hsep_below',
+                'col_left',
+                'col_right',
+                'hsep_left',
+                'hsep_right',
+                '---------',
+                'remove_row',
+                'remove_col',
+                '---------',
+                'undo',
+                'redo',
+              ],
               copyPaste: true,
               fixedRowsTop: 0,
               fixedColumnsLeft: 0,
-              licenseKey: 'non-commercial-and-evaluation'
+              licenseKey: 'non-commercial-and-evaluation',
+              fillHandle: {
+                autoInsertRow: false,
+              },
+              stretchH: 'none',
+              preventOverflow: 'horizontal',
             })
           }
 
