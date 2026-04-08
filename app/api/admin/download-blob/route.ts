@@ -24,8 +24,13 @@ export async function GET(request: NextRequest) {
 
     if (!result) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    const arrayBuffer = await result.stream.arrayBuffer()
-    const base64 = Buffer.from(arrayBuffer).toString('base64')
+    // Convert Readable stream to Buffer
+    const chunks: Buffer[] = []
+    for await (const chunk of result.stream) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+    }
+    const buffer = Buffer.concat(chunks)
+    const base64 = buffer.toString('base64')
 
     return NextResponse.json({
       data: base64,

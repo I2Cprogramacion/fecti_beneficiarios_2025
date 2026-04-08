@@ -483,7 +483,7 @@ export function AdminDashboard({
       {/* Excel Preview Modal */}
       {previewModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-2 py-2">
-          <div className="bg-card border border-border rounded-lg shadow-2xl w-full h-full max-w-6xl flex flex-col">
+          <div className="bg-card border border-border rounded-lg shadow-2xl w-full flex flex-col" style={{ aspectRatio: '16 / 9', maxHeight: '90vh' }}>
             {/* Modal Header */}
             <div className="bg-primary text-primary-foreground p-4 flex-shrink-0 border-b border-border flex items-center justify-between">
               <div>
