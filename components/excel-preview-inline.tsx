@@ -199,5 +199,5 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
     )
   }
 
-  return <div ref={containerRef} className="w-full h-full" />
+  return <div ref={containerRef} className="w-full h-full block overflow-hidden" style={{ position: 'relative' }} />
 }

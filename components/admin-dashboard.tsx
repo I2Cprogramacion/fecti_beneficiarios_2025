@@ -494,7 +494,7 @@ export function AdminDashboard({
 
       {/* Excel Preview Fullscreen Overlay */}
       {previewModal && (
-        <div className="fixed inset-0 z-50 bg-background flex flex-col">
+        <div className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden">
           {/* Header */}
           <div className="bg-primary text-primary-foreground p-4 flex-shrink-0 border-b border-border flex items-center justify-between">
             <div>
@@ -511,7 +511,7 @@ export function AdminDashboard({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 w-full overflow-hidden">
             <ExcelPreviewInline projectId={previewModal.id} />
           </div>
         </div>
