@@ -110,22 +110,6 @@ async function getResponseTimeMetrics() {
   return rows[0] || { avg_days: 0, min_days: 0, max_days: 0, total_with_both: 0 }
 }
 
-// Top 10 proyectos por monto
-async function getTopProjectsByAmount() {
-  return sql`
-    SELECT
-      p.clave,
-      p.titulo,
-      p.componente,
-      p.monto,
-      CASE WHEN s.id IS NOT NULL THEN TRUE ELSE FALSE END AS submitted
-    FROM projects p
-    LEFT JOIN submissions s ON s.project_id = p.id
-    ORDER BY p.monto DESC
-    LIMIT 10
-  `
-}
-
 // Distribución por rango de monto
 async function getAmountDistribution() {
   return sql`
@@ -165,7 +149,6 @@ export default async function AdminMetricsPage() {
     inactiveProjects,
     dailySubmissions,
     responseTime,
-    topProjects,
     amountDistribution,
   ] = await Promise.all([
     getComponentMetrics(),
@@ -175,7 +158,6 @@ export default async function AdminMetricsPage() {
     getInactiveProjects(),
     getDailySubmissions(),
     getResponseTimeMetrics(),
-    getTopProjectsByAmount(),
     getAmountDistribution(),
   ])
 
@@ -188,7 +170,6 @@ export default async function AdminMetricsPage() {
       inactiveProjects={inactiveProjects}
       dailySubmissions={dailySubmissions}
       responseTime={responseTime}
-      topProjects={topProjects}
       amountDistribution={amountDistribution}
       adminEmail={session.email}
     />

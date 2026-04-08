@@ -57,14 +57,6 @@ interface ResponseTime {
   total_with_both: number
 }
 
-interface TopProject {
-  clave: string
-  titulo: string
-  componente: string
-  monto: number
-  submitted: boolean
-}
-
 interface AmountRange {
   rango: string
   total: number
@@ -80,7 +72,6 @@ interface AdminMetricsProps {
   inactiveProjects: InactiveProject[]
   dailySubmissions: DailySubmission[]
   responseTime: ResponseTime
-  topProjects: TopProject[]
   amountDistribution: AmountRange[]
   adminEmail: string
 }
@@ -100,6 +91,25 @@ function formatMoneyFull(n: number) {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 2 }).format(n)
 }
 
+const COMPONENTE_COLORS: Record<string, string> = {
+  'C01-INFRA': '#2563eb',
+  'C02-IBA': '#7c3aed',
+  'C03-FT': '#059669',
+  'C04-IYE': '#d97706',
+}
+
+function DonutChart({ percentage, size = 120, stroke = 12, color = '#2563eb' }: { percentage: number; size?: number; stroke?: number; color?: string }) {
+  const radius = (size - stroke) / 2
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (percentage / 100) * circumference
+  return (
+    <svg width={size} height={size} className="transform -rotate-90">
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="currentColor" strokeWidth={stroke} className="text-secondary" />
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={color} strokeWidth={stroke} strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-700" />
+    </svg>
+  )
+}
+
 export function AdminMetrics({
   componentMetrics,
   userAssignment,
@@ -108,7 +118,6 @@ export function AdminMetrics({
   inactiveProjects,
   dailySubmissions,
   responseTime,
-  topProjects,
   amountDistribution,
   adminEmail,
 }: AdminMetricsProps) {
@@ -122,6 +131,10 @@ export function AdminMetrics({
 
   const completionPercent = financial.total_projects > 0
     ? Math.round((financial.total_submitted / financial.total_projects) * 100)
+    : 0
+
+  const assignmentPercent = userAssignment.total_projects > 0
+    ? Math.round((userAssignment.assigned / userAssignment.total_projects) * 100)
     : 0
 
   return (
@@ -154,282 +167,286 @@ export function AdminMetrics({
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-1">
-        {/* Resumen financiero */}
+        {/* ═══════ RESUMEN GENERAL CON DONUTS ═══════ */}
         <h2 className="text-lg font-bold text-foreground mb-4">Resumen General</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-8">
-          <MetricCard
-            value={formatMoney(financial.monto_total_aprobado)}
-            label="Monto total aprobado"
-            className="bg-primary text-primary-foreground col-span-2 lg:col-span-1"
-          />
-          <MetricCard
-            value={formatMoney(financial.monto_con_entrega)}
-            label="Monto con entrega"
-            className="bg-green-600 text-white"
-          />
-          <MetricCard
-            value={formatMoney(financial.monto_pendiente)}
-            label="Monto pendiente"
-            className="bg-amber-500 text-white"
-          />
-          <MetricCard
-            value={`${financial.total_submitted} / ${financial.total_projects}`}
-            label="Proyectos entregados"
-            className="bg-accent text-white"
-          />
-          <MetricCard
-            value={`${completionPercent}%`}
-            label="Avance global"
-            className="bg-secondary text-foreground"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {/* Donut: Avance de entregas */}
+          <div className="bg-card border border-border rounded-lg p-5 shadow-sm flex items-center gap-5">
+            <div className="relative shrink-0">
+              <DonutChart percentage={completionPercent} color="#16a34a" />
+              <div className="absolute inset-0 flex items-center justify-center rotate-90">
+                <span className="text-2xl font-bold text-foreground">{completionPercent}%</span>
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-foreground mb-2">Avance de Entregas</p>
+              <p className="text-xs text-green-700">✓ {financial.total_submitted} entregados</p>
+              <p className="text-xs text-amber-700">◷ {financial.total_projects - financial.total_submitted} pendientes</p>
+              <p className="text-xs text-muted-foreground mt-1">{financial.total_projects} proyectos totales</p>
+            </div>
+          </div>
+
+          {/* Donut: Asignación de usuarios */}
+          <div className="bg-card border border-border rounded-lg p-5 shadow-sm flex items-center gap-5">
+            <div className="relative shrink-0">
+              <DonutChart percentage={assignmentPercent} color="#2563eb" />
+              <div className="absolute inset-0 flex items-center justify-center rotate-90">
+                <span className="text-2xl font-bold text-foreground">{assignmentPercent}%</span>
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-foreground mb-2">Cobertura de Asignación</p>
+              <p className="text-xs text-blue-700">✓ {userAssignment.assigned} asignados</p>
+              <p className="text-xs text-amber-700">◷ {userAssignment.unassigned} sin asignar</p>
+              <p className="text-xs text-muted-foreground mt-1">{userAssignment.pending_password_change} pendientes de cambiar contraseña</p>
+            </div>
+          </div>
+
+          {/* Resumen financiero */}
+          <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
+            <p className="text-sm font-bold text-foreground mb-3">Resumen Financiero</p>
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Total aprobado</span>
+                <span className="font-mono font-bold text-foreground">{formatMoney(financial.monto_total_aprobado)}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-green-700">Con entrega</span>
+                <span className="font-mono font-semibold text-green-700">{formatMoney(financial.monto_con_entrega)}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-amber-700">Pendiente</span>
+                <span className="font-mono font-semibold text-amber-700">{formatMoney(financial.monto_pendiente)}</span>
+              </div>
+              <div className="w-full bg-secondary rounded-full h-3 overflow-hidden mt-1">
+                <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${financial.monto_total_aprobado > 0 ? (Number(financial.monto_con_entrega) / Number(financial.monto_total_aprobado)) * 100 : 0}%` }} />
+              </div>
+              <p className="text-[10px] text-muted-foreground text-right">
+                {financial.monto_total_aprobado > 0 ? `${((Number(financial.monto_con_entrega) / Number(financial.monto_total_aprobado)) * 100).toFixed(1)}% del presupuesto con entrega` : ''}
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Estado de asignación */}
-        <h2 className="text-lg font-bold text-foreground mb-4">Estado de Asignaciones</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-          <MetricCard
-            value={userAssignment.assigned}
-            label="Usuarios asignados"
-            className="bg-green-50 text-green-800 border border-green-200"
-          />
-          <MetricCard
-            value={userAssignment.unassigned}
-            label="Sin usuario asignado"
-            className="bg-amber-50 text-amber-800 border border-amber-200"
-          />
-          <MetricCard
-            value={userAssignment.pending_password_change}
-            label="Pendientes de cambiar contraseña"
-            className="bg-blue-50 text-blue-800 border border-blue-200"
-          />
-          <MetricCard
-            value={`${userAssignment.total_projects > 0 ? Math.round((userAssignment.assigned / userAssignment.total_projects) * 100) : 0}%`}
-            label="Cobertura de asignación"
-            className="bg-secondary text-foreground"
-          />
-        </div>
-
-        {/* Avance por componente */}
+        {/* ═══════ AVANCE POR COMPONENTE: BARRAS + TABLA ═══════ */}
         <h2 className="text-lg font-bold text-foreground mb-4">Avance por Componente</h2>
-        <div className="grid gap-4 mb-8">
-          {componentMetrics.map((c) => (
-            <div key={c.componente} className="bg-card border border-border rounded-lg p-5 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
-                <div>
-                  <span className="inline-block bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded text-xs mr-2">
-                    {c.componente}
-                  </span>
-                  <span className="text-sm font-medium text-foreground">
-                    {COMPONENTE_LABELS[c.componente] || c.componente}
-                  </span>
-                </div>
-                <div className="text-xs text-muted-foreground mt-1 sm:mt-0">
-                  {formatMoneyFull(Number(c.monto_total))} aprobado
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              <div className="w-full bg-secondary rounded-full h-4 mb-2 overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${Number(c.progress)}%`,
-                    background: Number(c.progress) === 100
-                      ? '#16a34a'
-                      : Number(c.progress) >= 50
-                        ? '#2563eb'
-                        : '#f59e0b',
-                  }}
-                />
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4 text-xs">
-                <span className="text-foreground font-semibold">{Number(c.progress)}% completado</span>
-                <span className="text-green-700">
-                  ✓ {c.submitted} entregado{c.submitted !== 1 ? 's' : ''}
-                </span>
-                <span className="text-amber-700">
-                  ◷ {c.pending} pendiente{c.pending !== 1 ? 's' : ''}
-                </span>
-                <span className="text-muted-foreground">
-                  {c.total} proyecto{c.total !== 1 ? 's' : ''}
-                </span>
-                <span className="text-muted-foreground hidden sm:inline">
-                  | {formatMoney(Number(c.monto_entregado))} con entrega
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Distribución de monto por componente */}
-        <h2 className="text-lg font-bold text-foreground mb-4">Distribución de Monto por Componente</h2>
-        <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden mb-8">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-secondary border-b border-border">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Componente</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Proyectos</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Monto Aprobado</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground hidden sm:table-cell">% del Total</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground hidden md:table-cell">Monto con Entrega</th>
-              </tr>
-            </thead>
-            <tbody>
-              {componentMetrics.map((c, i) => {
-                const pctOfTotal = financial.monto_total_aprobado > 0
-                  ? ((Number(c.monto_total) / Number(financial.monto_total_aprobado)) * 100).toFixed(1)
-                  : '0'
-                return (
-                  <tr key={c.componente} className={`border-b border-border last:border-0 ${i % 2 === 0 ? '' : 'bg-secondary/30'}`}>
-                    <td className="px-4 py-3 text-xs">
-                      <span className="font-semibold text-primary">{c.componente}</span>
-                      <span className="text-muted-foreground ml-2 hidden lg:inline">{COMPONENTE_LABELS[c.componente]}</span>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-right font-mono">{c.total}</td>
-                    <td className="px-4 py-3 text-xs text-right font-mono">{formatMoneyFull(Number(c.monto_total))}</td>
-                    <td className="px-4 py-3 text-xs text-right font-mono hidden sm:table-cell">{pctOfTotal}%</td>
-                    <td className="px-4 py-3 text-xs text-right font-mono hidden md:table-cell">{formatMoneyFull(Number(c.monto_entregado))}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-            <tfoot>
-              <tr className="bg-secondary font-semibold">
-                <td className="px-4 py-3 text-xs">Total</td>
-                <td className="px-4 py-3 text-xs text-right font-mono">{financial.total_projects}</td>
-                <td className="px-4 py-3 text-xs text-right font-mono">{formatMoneyFull(Number(financial.monto_total_aprobado))}</td>
-                <td className="px-4 py-3 text-xs text-right font-mono hidden sm:table-cell">100%</td>
-                <td className="px-4 py-3 text-xs text-right font-mono hidden md:table-cell">{formatMoneyFull(Number(financial.monto_con_entrega))}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-
-        {/* Tiempo promedio de respuesta */}
-        <h2 className="text-lg font-bold text-foreground mb-4">Tiempo de Respuesta</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-          <MetricCard
-            value={responseTime.total_with_both > 0 ? `${responseTime.avg_days} días` : 'N/A'}
-            label="Promedio entre asignación y entrega"
-            className="bg-primary text-primary-foreground"
-          />
-          <MetricCard
-            value={responseTime.total_with_both > 0 ? `${responseTime.min_days} días` : 'N/A'}
-            label="Más rápido"
-            className="bg-green-50 text-green-800 border border-green-200"
-          />
-          <MetricCard
-            value={responseTime.total_with_both > 0 ? `${responseTime.max_days} días` : 'N/A'}
-            label="Más lento"
-            className="bg-amber-50 text-amber-800 border border-amber-200"
-          />
-          <MetricCard
-            value={responseTime.total_with_both}
-            label="Entregas con usuario asignado"
-            className="bg-secondary text-foreground"
-          />
-        </div>
-
-        {/* Entregas acumuladas por día */}
-        <h2 className="text-lg font-bold text-foreground mb-4">Entregas por Día</h2>
         <div className="bg-card border border-border rounded-lg p-5 shadow-sm mb-8">
-          {dailySubmissions.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Aún no hay entregas registradas.</p>
-          ) : (
-            <>
-              <div className="flex items-end gap-1 h-40 mb-3">
-                {(() => {
-                  const maxCount = Math.max(...dailySubmissions.map(d => d.count))
-                  return dailySubmissions.map((d, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-1 min-w-0">
-                      <span className="text-[10px] font-mono text-foreground font-semibold">{d.count}</span>
-                      <div
-                        className="w-full bg-primary rounded-t transition-all min-h-[4px]"
-                        style={{ height: `${(d.count / maxCount) * 100}%` }}
-                        title={`${d.date}: ${d.count} entrega${d.count !== 1 ? 's' : ''}`}
-                      />
-                    </div>
-                  ))
-                })()}
-              </div>
-              <div className="flex gap-1">
-                {dailySubmissions.map((d, i) => (
-                  <div key={i} className="flex-1 text-center min-w-0">
-                    <span className="text-[9px] text-muted-foreground font-mono block truncate">
-                      {new Date(d.date + 'T12:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}
-                    </span>
+          {/* Barras horizontales */}
+          <div className="space-y-3 mb-6">
+            {componentMetrics.map((c) => {
+              const pct = c.total > 0 ? (c.submitted / c.total) * 100 : 0
+              const color = COMPONENTE_COLORS[c.componente] || '#6b7280'
+              return (
+                <div key={c.componente} className="flex items-center gap-3">
+                  <div className="w-24 shrink-0">
+                    <span className="text-xs font-bold" style={{ color }}>{c.componente}</span>
                   </div>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-3 text-center">
-                Total acumulado: {dailySubmissions.reduce((sum, d) => sum + d.count, 0)} entregas en {dailySubmissions.length} día{dailySubmissions.length !== 1 ? 's' : ''}
-              </p>
-            </>
-          )}
+                  <div className="flex-1">
+                    <div className="w-full bg-secondary rounded-full h-7 overflow-hidden relative">
+                      <div className="h-full rounded-full transition-all duration-500 flex items-center px-2" style={{ width: `${Math.max(pct, 3)}%`, background: color, minWidth: pct > 0 ? '32px' : '0' }}>
+                        {pct > 12 && <span className="text-white text-[10px] font-bold">{Math.round(pct)}%</span>}
+                      </div>
+                      {pct <= 12 && pct > 0 && <span className="absolute text-[10px] font-bold text-foreground" style={{ left: `calc(${Math.max(pct, 3)}% + 6px)`, top: '50%', transform: 'translateY(-50%)' }}>{Math.round(pct)}%</span>}
+                      {pct === 0 && <span className="absolute text-[10px] font-bold text-muted-foreground left-2 top-1/2 -translate-y-1/2">0%</span>}
+                    </div>
+                  </div>
+                  <div className="w-36 text-right shrink-0 hidden sm:block">
+                    <span className="text-xs text-muted-foreground font-mono">{c.submitted}/{c.total} · {formatMoney(Number(c.monto_total))}</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Tabla detallada */}
+          <div className="border-t border-border pt-4">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left pb-2 text-xs font-semibold text-muted-foreground">Componente</th>
+                  <th className="text-center pb-2 text-xs font-semibold text-muted-foreground">Proyectos</th>
+                  <th className="text-center pb-2 text-xs font-semibold text-muted-foreground">Entregados</th>
+                  <th className="text-center pb-2 text-xs font-semibold text-muted-foreground">Pendientes</th>
+                  <th className="text-right pb-2 text-xs font-semibold text-muted-foreground hidden sm:table-cell">Monto Aprobado</th>
+                  <th className="text-right pb-2 text-xs font-semibold text-muted-foreground hidden md:table-cell">Monto con Entrega</th>
+                  <th className="text-right pb-2 text-xs font-semibold text-muted-foreground hidden lg:table-cell">% del Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {componentMetrics.map((c, i) => {
+                  const pctOfTotal = financial.monto_total_aprobado > 0 ? ((Number(c.monto_total) / Number(financial.monto_total_aprobado)) * 100).toFixed(1) : '0'
+                  return (
+                    <tr key={c.componente} className={`border-b border-border last:border-0 ${i % 2 !== 0 ? 'bg-secondary/30' : ''}`}>
+                      <td className="py-2.5 text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-sm shrink-0" style={{ background: COMPONENTE_COLORS[c.componente] || '#6b7280' }} />
+                          <span className="font-semibold">{c.componente}</span>
+                          <span className="text-muted-foreground hidden lg:inline">– {COMPONENTE_LABELS[c.componente]}</span>
+                        </div>
+                      </td>
+                      <td className="py-2.5 text-xs text-center font-mono">{c.total}</td>
+                      <td className="py-2.5 text-xs text-center"><span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-mono">{c.submitted}</span></td>
+                      <td className="py-2.5 text-xs text-center"><span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-mono">{c.pending}</span></td>
+                      <td className="py-2.5 text-xs text-right font-mono hidden sm:table-cell">{formatMoneyFull(Number(c.monto_total))}</td>
+                      <td className="py-2.5 text-xs text-right font-mono hidden md:table-cell">{formatMoneyFull(Number(c.monto_entregado))}</td>
+                      <td className="py-2.5 text-xs text-right font-mono hidden lg:table-cell">{pctOfTotal}%</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+              <tfoot>
+                <tr className="font-semibold bg-secondary/50">
+                  <td className="py-2.5 text-xs">Total</td>
+                  <td className="py-2.5 text-xs text-center font-mono">{financial.total_projects}</td>
+                  <td className="py-2.5 text-xs text-center font-mono">{financial.total_submitted}</td>
+                  <td className="py-2.5 text-xs text-center font-mono">{financial.total_projects - financial.total_submitted}</td>
+                  <td className="py-2.5 text-xs text-right font-mono hidden sm:table-cell">{formatMoneyFull(Number(financial.monto_total_aprobado))}</td>
+                  <td className="py-2.5 text-xs text-right font-mono hidden md:table-cell">{formatMoneyFull(Number(financial.monto_con_entrega))}</td>
+                  <td className="py-2.5 text-xs text-right font-mono hidden lg:table-cell">100%</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </div>
 
-        {/* Distribución por rango de monto */}
-        <h2 className="text-lg font-bold text-foreground mb-4">Distribución por Rango de Monto</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-          {amountDistribution.map((r) => (
-            <div key={r.rango} className="bg-card border border-border rounded-lg p-4 shadow-sm">
-              <p className="text-sm font-bold text-foreground mb-1">{r.rango}</p>
-              <p className="text-2xl font-bold text-primary">{r.total}</p>
-              <p className="text-xs text-muted-foreground">proyecto{r.total !== 1 ? 's' : ''}</p>
-              <div className="w-full bg-secondary rounded-full h-2 mt-2 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-green-500"
-                  style={{ width: `${r.total > 0 ? (r.submitted / r.total) * 100 : 0}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-1">
-                {r.submitted}/{r.total} entregados · {formatMoney(Number(r.monto_total))}
+        {/* ═══════ TIEMPO DE RESPUESTA + ENTREGAS POR DÍA (LADO A LADO) ═══════ */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+          {/* Tiempo de respuesta */}
+          <div className="bg-card border border-border rounded-lg shadow-sm">
+            <div className="p-5 border-b border-border">
+              <h2 className="text-sm font-bold text-foreground">Tiempo de Respuesta</h2>
+              <p className="text-xs text-muted-foreground">Días entre asignación de usuario y entrega</p>
+            </div>
+            <div className="p-5">
+              {responseTime.total_with_both > 0 ? (
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="text-center p-3 bg-secondary/50 rounded-lg">
+                    <p className="text-2xl font-bold text-foreground">{responseTime.avg_days}</p>
+                    <p className="text-xs text-muted-foreground">Promedio</p>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <p className="text-2xl font-bold text-green-700">{responseTime.min_days}</p>
+                    <p className="text-xs text-muted-foreground">Más rápido</p>
+                  </div>
+                  <div className="text-center p-3 bg-amber-50 rounded-lg">
+                    <p className="text-2xl font-bold text-amber-700">{responseTime.max_days}</p>
+                    <p className="text-xs text-muted-foreground">Más lento</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-6">Aún no hay datos suficientes.</p>
+              )}
+              <p className="text-[10px] text-muted-foreground text-center mt-3">
+                Basado en {responseTime.total_with_both} entrega{responseTime.total_with_both !== 1 ? 's' : ''} con usuario asignado
               </p>
             </div>
-          ))}
+          </div>
+
+          {/* Entregas por día - gráfico */}
+          <div className="bg-card border border-border rounded-lg shadow-sm">
+            <div className="p-5 border-b border-border">
+              <h2 className="text-sm font-bold text-foreground">Entregas por Día</h2>
+              <p className="text-xs text-muted-foreground">
+                {dailySubmissions.length > 0
+                  ? `${dailySubmissions.reduce((s, d) => s + d.count, 0)} entregas en ${dailySubmissions.length} día${dailySubmissions.length !== 1 ? 's' : ''}`
+                  : 'Sin entregas aún'}
+              </p>
+            </div>
+            <div className="p-5">
+              {dailySubmissions.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">Aún no hay entregas registradas.</p>
+              ) : (
+                <>
+                  <div className="flex items-end gap-[3px] h-36">
+                    {(() => {
+                      const maxCount = Math.max(...dailySubmissions.map(d => d.count))
+                      return dailySubmissions.map((d, i) => (
+                        <div key={i} className="flex-1 flex flex-col items-center gap-0.5 min-w-0 group relative">
+                          <span className="text-[9px] font-mono text-foreground font-bold opacity-70 group-hover:opacity-100">{d.count}</span>
+                          <div className="w-full rounded-t transition-all duration-300 group-hover:opacity-80 min-h-[3px]" style={{ height: `${(d.count / maxCount) * 100}%`, background: 'linear-gradient(to top, #2563eb, #60a5fa)' }} />
+                          <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-foreground text-background text-[9px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                            {new Date(d.date + 'T12:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}: {d.count}
+                          </div>
+                        </div>
+                      ))
+                    })()}
+                  </div>
+                  <div className="flex gap-[3px] mt-1">
+                    {dailySubmissions.map((d, i) => (
+                      <div key={i} className="flex-1 text-center min-w-0">
+                        <span className="text-[8px] text-muted-foreground font-mono block truncate">
+                          {new Date(d.date + 'T12:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Top 10 proyectos por monto */}
-        <h2 className="text-lg font-bold text-foreground mb-4">Top 10 Proyectos por Monto</h2>
-        <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden mb-8">
-          <table className="w-full text-sm">
+        {/* ═══════ DISTRIBUCIÓN POR RANGO DE MONTO ═══════ */}
+        <h2 className="text-lg font-bold text-foreground mb-4">Distribución por Rango de Monto</h2>
+        <div className="bg-card border border-border rounded-lg shadow-sm mb-8 p-5">
+          {/* Barras visuales */}
+          <div className="space-y-3 mb-5">
+            {amountDistribution.map((r, i) => {
+              const barColors = ['#2563eb', '#7c3aed', '#059669', '#d97706']
+              const maxTotal = Math.max(...amountDistribution.map(a => a.total))
+              return (
+                <div key={r.rango} className="flex items-center gap-3">
+                  <div className="w-28 text-xs font-semibold text-foreground shrink-0">{r.rango}</div>
+                  <div className="flex-1">
+                    <div className="w-full bg-secondary rounded-full h-7 overflow-hidden relative">
+                      <div className="h-full rounded-full transition-all duration-500 flex items-center px-2" style={{ width: `${maxTotal > 0 ? (r.total / maxTotal) * 100 : 0}%`, background: barColors[i % barColors.length], minWidth: r.total > 0 ? '32px' : '0' }}>
+                        <span className="text-white text-[10px] font-bold">{r.total}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-32 text-right shrink-0 hidden sm:block">
+                    <span className="text-xs text-green-700 font-mono">{r.submitted}/{r.total}</span>
+                    <span className="text-xs text-muted-foreground"> · </span>
+                    <span className="text-xs text-muted-foreground font-mono">{formatMoney(Number(r.monto_total))}</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          {/* Tabla detalle */}
+          <table className="w-full text-sm border-t border-border">
             <thead>
-              <tr className="bg-secondary border-b border-border">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">#</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Proyecto</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden sm:table-cell">Componente</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Monto</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Estatus</th>
+              <tr className="border-b border-border">
+                <th className="text-left pb-2 pt-3 text-xs font-semibold text-muted-foreground">Rango</th>
+                <th className="text-center pb-2 pt-3 text-xs font-semibold text-muted-foreground">Proyectos</th>
+                <th className="text-center pb-2 pt-3 text-xs font-semibold text-muted-foreground">Entregados</th>
+                <th className="text-center pb-2 pt-3 text-xs font-semibold text-muted-foreground">% Avance</th>
+                <th className="text-right pb-2 pt-3 text-xs font-semibold text-muted-foreground hidden sm:table-cell">Monto Total</th>
               </tr>
             </thead>
             <tbody>
-              {topProjects.map((p, i) => (
-                <tr key={p.clave} className={`border-b border-border last:border-0 ${i % 2 === 0 ? '' : 'bg-secondary/30'}`}>
-                  <td className="px-4 py-3 text-xs font-bold text-primary">{i + 1}</td>
-                  <td className="px-4 py-3 text-xs max-w-xs">
-                    <span className="font-mono text-[10px] text-muted-foreground block">{p.clave}</span>
-                    <span className="line-clamp-1">{p.titulo}</span>
-                  </td>
-                  <td className="px-4 py-3 text-xs hidden sm:table-cell">
-                    <span className="bg-primary/10 text-primary font-medium px-1.5 py-0.5 rounded text-[10px]">{p.componente}</span>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-right font-mono font-semibold">{formatMoneyFull(Number(p.monto))}</td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      p.submitted ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                    }`}>
-                      {p.submitted ? 'Entregado' : 'Pendiente'}
-                    </span>
-                  </td>
+              {amountDistribution.map((r, i) => (
+                <tr key={r.rango} className={`border-b border-border last:border-0 ${i % 2 !== 0 ? 'bg-secondary/30' : ''}`}>
+                  <td className="py-2.5 text-xs font-semibold">{r.rango}</td>
+                  <td className="py-2.5 text-xs text-center font-mono">{r.total}</td>
+                  <td className="py-2.5 text-xs text-center"><span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-mono">{r.submitted}</span></td>
+                  <td className="py-2.5 text-xs text-center font-mono">{r.total > 0 ? `${Math.round((r.submitted / r.total) * 100)}%` : '—'}</td>
+                  <td className="py-2.5 text-xs text-right font-mono hidden sm:table-cell">{formatMoneyFull(Number(r.monto_total))}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Proyectos sin actividad (alerta) */}
-        <h2 className="text-lg font-bold text-foreground mb-1">Proyectos Sin Actividad</h2>
+        {/* ═══════ PROYECTOS SIN ACTIVIDAD ═══════ */}
+        <h2 className="text-lg font-bold text-foreground mb-1">
+          Proyectos Sin Actividad
+          {inactiveProjects.length > 0 && (
+            <span className="ml-2 text-xs font-normal bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+              {inactiveProjects.length} alerta{inactiveProjects.length !== 1 ? 's' : ''}
+            </span>
+          )}
+        </h2>
         <p className="text-xs text-muted-foreground mb-4">Usuarios asignados que aún no han subido su archivo</p>
         <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden mb-8">
           {inactiveProjects.length === 0 ? (
@@ -437,93 +454,90 @@ export function AdminMetrics({
               🎉 Todos los usuarios asignados han entregado su archivo.
             </div>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-secondary border-b border-border">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Proyecto</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden md:table-cell">Correo</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden sm:table-cell">Componente</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Días sin actividad</th>
-                </tr>
-              </thead>
-              <tbody>
-                {inactiveProjects.map((p, i) => {
-                  const isUrgent = p.days_since_assigned >= 14
-                  const isWarning = p.days_since_assigned >= 7
-                  return (
-                    <tr key={p.clave} className={`border-b border-border last:border-0 ${i % 2 === 0 ? '' : 'bg-secondary/30'}`}>
-                      <td className="px-4 py-3 text-xs max-w-xs">
-                        <span className="font-mono text-[10px] text-muted-foreground block">{p.clave}</span>
-                        <span className="line-clamp-1">{p.titulo}</span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{p.assigned_email}</td>
-                      <td className="px-4 py-3 text-xs hidden sm:table-cell">
-                        <span className="bg-primary/10 text-primary font-medium px-1.5 py-0.5 rounded text-[10px]">{p.componente}</span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                          isUrgent
-                            ? 'bg-red-100 text-red-700'
-                            : isWarning
-                              ? 'bg-amber-100 text-amber-700'
-                              : 'bg-blue-100 text-blue-700'
-                        }`}>
-                          {p.days_since_assigned} día{p.days_since_assigned !== 1 ? 's' : ''}
-                        </span>
-                      </td>
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-secondary border-b border-border">
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Proyecto</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden md:table-cell">Correo</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden sm:table-cell">Componente</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground hidden lg:table-cell">Monto</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Días</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Semáforo</th>
                     </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {inactiveProjects.map((p, i) => {
+                      const isUrgent = p.days_since_assigned >= 14
+                      const isWarning = p.days_since_assigned >= 7
+                      return (
+                        <tr key={p.clave} className={`border-b border-border last:border-0 ${i % 2 !== 0 ? 'bg-secondary/30' : ''}`}>
+                          <td className="px-4 py-3 text-xs max-w-xs">
+                            <span className="font-mono text-[10px] text-muted-foreground block">{p.clave}</span>
+                            <span className="line-clamp-1">{p.titulo}</span>
+                          </td>
+                          <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{p.assigned_email}</td>
+                          <td className="px-4 py-3 text-xs hidden sm:table-cell">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium text-white" style={{ background: COMPONENTE_COLORS[p.componente] || '#6b7280' }}>{p.componente}</span>
+                          </td>
+                          <td className="px-4 py-3 text-xs text-right font-mono hidden lg:table-cell">{formatMoney(Number(p.monto))}</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-xs font-mono font-bold">{p.days_since_assigned}d</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`inline-block w-4 h-4 rounded-full ${isUrgent ? 'bg-red-500' : isWarning ? 'bg-amber-400' : 'bg-blue-400'}`} title={isUrgent ? 'Urgente (≥14 días)' : isWarning ? 'Atención (≥7 días)' : 'Reciente (<7 días)'} />
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="px-4 py-2 bg-secondary/50 border-t border-border flex gap-4 text-[10px] text-muted-foreground">
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" /> ≥14 días (urgente)</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" /> ≥7 días (atención)</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block" /> &lt;7 días (reciente)</span>
+              </div>
+            </>
           )}
         </div>
 
-        {/* Actividad reciente */}
+        {/* ═══════ ACTIVIDAD RECIENTE ═══════ */}
         <h2 className="text-lg font-bold text-foreground mb-4">Actividad Reciente</h2>
         <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden mb-8">
           {recentActivity.length === 0 ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">
-              Aún no hay entregas registradas.
-            </div>
+            <div className="py-12 text-center text-sm text-muted-foreground">Aún no hay entregas registradas.</div>
           ) : (
-            <div className="divide-y divide-border">
-              {recentActivity.map((a, i) => (
-                <div key={i} className="px-4 py-3 flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                      <span className="text-green-700 text-xs">✓</span>
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-mono text-primary font-semibold">{a.clave}</span>
-                      <span className="bg-primary/10 text-primary font-medium px-1.5 py-0.5 rounded text-[10px]">
-                        {a.componente}
-                      </span>
-                    </div>
-                    <p className="text-xs text-foreground mt-0.5 line-clamp-1">{a.titulo}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {a.file_name}
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0 text-right">
-                    <p className="text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(a.uploaded_at).toLocaleDateString('es-MX', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {new Date(a.uploaded_at).toLocaleTimeString('es-MX', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-secondary border-b border-border">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Proyecto</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden sm:table-cell">Componente</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden md:table-cell">Archivo</th>
+                    <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Fecha</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentActivity.map((a, i) => (
+                    <tr key={i} className={`border-b border-border last:border-0 ${i % 2 !== 0 ? 'bg-secondary/30' : ''}`}>
+                      <td className="px-4 py-3 text-xs max-w-xs">
+                        <span className="font-mono text-[10px] text-primary font-semibold block">{a.clave}</span>
+                        <span className="line-clamp-1 text-foreground">{a.titulo}</span>
+                      </td>
+                      <td className="px-4 py-3 hidden sm:table-cell">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium text-white" style={{ background: COMPONENTE_COLORS[a.componente] || '#6b7280' }}>{a.componente}</span>
+                      </td>
+                      <td className="px-4 py-3 text-[10px] text-muted-foreground hidden md:table-cell truncate max-w-[200px]">{a.file_name}</td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <span className="text-xs text-foreground block">{new Date(a.uploaded_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                        <span className="text-[10px] text-muted-foreground">{new Date(a.uploaded_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
@@ -532,23 +546,6 @@ export function AdminMetrics({
       <footer className="border-t border-border py-4 text-center text-xs text-muted-foreground">
         FECTI &copy; 2025 &mdash; Métricas del sistema
       </footer>
-    </div>
-  )
-}
-
-function MetricCard({
-  value,
-  label,
-  className = '',
-}: {
-  value: number | string
-  label: string
-  className?: string
-}) {
-  return (
-    <div className={`rounded-lg p-4 shadow-sm ${className}`}>
-      <p className="text-xl font-bold leading-tight">{value}</p>
-      <p className="text-xs mt-1 opacity-80">{label}</p>
     </div>
   )
 }
