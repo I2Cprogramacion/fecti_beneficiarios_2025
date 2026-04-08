@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { sql } from '@/lib/db'
 import { makeSessionCookie } from '@/lib/auth'
+import { rateLimit } from '@/lib/rate-limit'
 
 function errorRedirect(req: NextRequest, msg: string) {
   const url = new URL('/admin', req.url)
@@ -10,6 +11,11 @@ function errorRedirect(req: NextRequest, msg: string) {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  if (!rateLimit(ip)) {
+    return errorRedirect(req, 'Demasiados intentos. Intenta de nuevo en un minuto.')
+  }
+
   // Soportar tanto form-data (native form) como JSON (fetch)
   let email = ''
   let password = ''

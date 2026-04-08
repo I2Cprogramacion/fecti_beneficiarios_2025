@@ -15,6 +15,11 @@ export async function POST(request: NextRequest) {
     const projectId = formData.get('projectId') as string
     const fileType = formData.get('fileType') as string
 
+    // Beneficiaries can only upload to their own project
+    if (session.role === 'beneficiary' && String(session.projectId) !== projectId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     if (!file || !projectId || !fileType) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -32,8 +37,7 @@ export async function POST(request: NextRequest) {
     `
 
     return NextResponse.json({ ok: true, pathname: blob.pathname })
-  } catch (error) {
-    console.error('Upload error:', error)
+  } catch {
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
   }
 }

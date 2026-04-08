@@ -29,10 +29,9 @@ export async function DELETE(req: NextRequest) {
       ok: true,
       message: 'Usuario eliminado correctamente',
     })
-  } catch (error) {
-    console.error('Delete user error:', error)
+  } catch {
     return NextResponse.json(
-      { error: 'Error al eliminar usuario: ' + (error instanceof Error ? error.message : 'desconocido') },
+      { error: 'Error al eliminar usuario.' },
       { status: 500 }
     )
   }

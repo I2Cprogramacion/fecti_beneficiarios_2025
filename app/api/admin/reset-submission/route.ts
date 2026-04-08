@@ -32,10 +32,9 @@ export async function DELETE(req: NextRequest) {
       ok: true,
       message: 'Envío reiniciado correctamente',
     })
-  } catch (error) {
-    console.error('Reset submission error:', error)
+  } catch {
     return NextResponse.json(
-      { error: 'Error al reiniciar envío: ' + (error instanceof Error ? error.message : 'desconocido') },
+      { error: 'Error al reiniciar envío.' },
       { status: 500 }
     )
   }

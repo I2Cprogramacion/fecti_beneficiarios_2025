@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
   const res = NextResponse.json({ ok: true })
   res.cookies.set('session', cookie, {
     httpOnly: true,
+    secure: true,
     path: '/',
     maxAge: 60 * 60 * 8,
     sameSite: 'lax',

@@ -31,10 +31,9 @@ export async function DELETE(req: NextRequest) {
     await sql`DELETE FROM submissions WHERE project_id = ${session.projectId}`
 
     return NextResponse.json({ ok: true, message: 'Archivo eliminado correctamente.' })
-  } catch (error) {
-    console.error('Error deleting submission:', error)
+  } catch {
     return NextResponse.json(
-      { error: 'Error al eliminar archivo: ' + (error instanceof Error ? error.message : 'desconocido') },
+      { error: 'Error al eliminar archivo.' },
       { status: 500 }
     )
   }

@@ -1,5 +1,8 @@
+import crypto from 'crypto'
 import { cookies } from 'next/headers'
 import { sql } from './db'
+
+const SECRET = process.env.SESSION_SECRET ?? ''
 
 export interface SessionUser {
   id: number
@@ -9,36 +12,51 @@ export interface SessionUser {
   mustChangePassword: boolean
 }
 
+/** Sign a payload string with HMAC-SHA256 and return the hex digest. */
+function sign(payload: string): string {
+  return crypto.createHmac('sha256', SECRET).update(payload).digest('hex')
+}
+
+/** Verify that a signature matches the expected HMAC for a payload. */
+function verify(payload: string, sig: string): boolean {
+  const expected = sign(payload)
+  if (sig.length !== expected.length) return false
+  return crypto.timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expected, 'hex'))
+}
+
 export async function getSession(): Promise<SessionUser | null> {
   const cookieStore = await cookies()
   const raw = cookieStore.get('session')?.value
-  console.log('🔍 getSession() - Cookie raw value:', raw ? raw.substring(0, 50) + '...' : 'NOT FOUND')
   if (!raw) return null
+
   try {
-    const data = JSON.parse(Buffer.from(raw, 'base64').toString('utf8'))
-    console.log('🔍 getSession() - Parsed cookie data:', data)
+    const dotIdx = raw.lastIndexOf('.')
+    if (dotIdx === -1) return null // unsigned cookie → force re-login
+
+    const payload = raw.slice(0, dotIdx)
+    const sig = raw.slice(dotIdx + 1)
+
+    if (!verify(payload, sig)) return null // tampered
+
+    const data = JSON.parse(Buffer.from(payload, 'base64').toString('utf8'))
     const rows = await sql`SELECT id, email, role, project_id, must_change_password FROM users WHERE id = ${data.id}`
-    console.log('🔍 getSession() - DB lookup result:', rows)
-    if (!rows.length) {
-      console.log('🔍 getSession() - User not found in DB!')
-      return null
-    }
+    if (!rows.length) return null
+
     const u = rows[0]
-    const session = {
+    return {
       id: u.id,
       email: u.email,
       role: u.role,
       projectId: u.project_id,
       mustChangePassword: u.must_change_password,
     }
-    console.log('🔍 getSession() - Returning session:', session)
-    return session
-  } catch (error) {
-    console.log('🔍 getSession() - Error:', error)
+  } catch {
     return null
   }
 }
 
+/** Create an HMAC-signed session cookie value. Format: base64payload.hmacHex */
 export function makeSessionCookie(user: SessionUser): string {
-  return Buffer.from(JSON.stringify(user)).toString('base64')
+  const payload = Buffer.from(JSON.stringify(user)).toString('base64')
+  return `${payload}.${sign(payload)}`
 }

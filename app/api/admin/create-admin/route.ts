@@ -70,10 +70,9 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     )
-  } catch (error) {
-    console.error('Error creating admin:', error)
+  } catch {
     return NextResponse.json(
-      { error: 'Error al crear admin: ' + (error instanceof Error ? error.message : 'desconocido') },
+      { error: 'Error al crear administrador.' },
       { status: 500 }
     )
   }
@@ -114,10 +113,9 @@ export async function DELETE(req: NextRequest) {
       ok: true,
       message: 'Administrador eliminado correctamente',
     })
-  } catch (error) {
-    console.error('Error deleting admin:', error)
+  } catch {
     return NextResponse.json(
-      { error: 'Error al eliminar admin: ' + (error instanceof Error ? error.message : 'desconocido') },
+      { error: 'Error al eliminar administrador.' },
       { status: 500 }
     )
   }

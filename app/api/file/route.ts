@@ -1,5 +1,6 @@
 import { get } from '@vercel/blob'
 import { getSession } from '@/lib/auth'
+import { sql } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
@@ -12,6 +13,18 @@ export async function GET(request: NextRequest) {
     const pathname = request.nextUrl.searchParams.get('pathname')
     if (!pathname) {
       return NextResponse.json({ error: 'Missing pathname' }, { status: 400 })
+    }
+
+    // Beneficiaries can only access files that belong to their project
+    if (session.role === 'beneficiary') {
+      const owns = await sql`
+        SELECT 1 FROM submissions
+        WHERE project_id = ${session.projectId} AND file_pathname = ${pathname}
+        LIMIT 1
+      `
+      if (!owns.length) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
     }
 
     const result = await get(pathname, {
@@ -40,8 +53,7 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'private, no-cache',
       },
     })
-  } catch (error) {
-    console.error('Error serving file:', error)
+  } catch {
     return NextResponse.json({ error: 'Failed to serve file' }, { status: 500 })
   }
 }
