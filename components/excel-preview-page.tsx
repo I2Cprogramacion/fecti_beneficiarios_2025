@@ -198,6 +198,14 @@ export function ExcelPreviewPage({ projectId }: ExcelPreviewPageProps) {
 
   return (
     <div className="flex-1 p-4 overflow-hidden flex flex-col">
+      {/* Container siempre renderizado */}
+      <div
+        ref={containerRef}
+        className="w-full flex-1 bg-white rounded border border-border overflow-hidden"
+        style={{ minHeight: '600px', display: loading || error ? 'none' : 'block' }}
+      />
+
+      {/* Loading overlay */}
       {loading && (
         <div className="flex items-center justify-center flex-1">
           <div className="text-center">
@@ -207,6 +215,7 @@ export function ExcelPreviewPage({ projectId }: ExcelPreviewPageProps) {
         </div>
       )}
 
+      {/* Error overlay */}
       {error && (
         <div className="flex items-center justify-center flex-1">
           <div className="text-center bg-destructive/10 border border-destructive/50 rounded-lg p-6 max-w-md">
@@ -220,13 +229,6 @@ export function ExcelPreviewPage({ projectId }: ExcelPreviewPageProps) {
             </button>
           </div>
         </div>
-      )}
-
-      {!loading && !error && (
-        <div
-          ref={containerRef}
-          className="w-full flex-1 bg-white rounded border border-border overflow-hidden"
-        />
       )}
     </div>
   )
