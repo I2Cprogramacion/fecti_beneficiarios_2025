@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { ExcelPreviewPage } from '@/components/excel-preview-page'
+import { CloseButton } from '@/components/close-button'
 
 async function getSubmission(projectId: string) {
   try {
@@ -70,13 +71,7 @@ export default async function PreviewPage({
             >
               ⛶
             </button>
-            <button
-              onClick={() => window.close()}
-              className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded transition-colors"
-              title="Cerrar ventana"
-            >
-              ✕
-            </button>
+            <CloseButton />
           </div>
         </div>
       </div>
