@@ -3,9 +3,6 @@ import { getSession } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { CreateAdminForm } from '@/components/create-admin-form'
 import { AdminsList } from '@/components/admins-list'
-import { Card } from '@/components/ui/card'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 
 async function getAdminUsers() {
   try {
@@ -29,37 +26,72 @@ export default async function AdminUsersPage() {
 
   const admins = await getAdminUsers()
 
+  const totalAdmins = admins.length
+  const pendingPassword = admins.filter((a: { must_change_password: boolean }) => a.must_change_password).length
+  const activeAdmins = totalAdmins - pendingPassword
+
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Administradores</h1>
-            <p className="text-muted-foreground mt-1">Gestiona los usuarios administradores</p>
+    <div className="min-h-screen flex flex-col bg-background font-sans">
+      {/* Header — mismo patrón que dashboard y métricas */}
+      <header className="bg-primary text-primary-foreground shadow-md">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-accent flex items-center justify-center text-xs font-bold text-white">F</div>
+            <div>
+              <p className="text-sm font-semibold leading-tight">FECTI – Administradores</p>
+              <p className="text-xs opacity-70 hidden sm:block">{session.email}</p>
+            </div>
           </div>
-          <Link href="/admin/dashboard">
-            <Button variant="outline">Volver al dashboard</Button>
-          </Link>
+          <nav className="flex items-center gap-4">
+            <a
+              href="/admin/dashboard"
+              className="text-xs font-medium opacity-90 hover:opacity-100 transition-opacity"
+            >
+              ← Panel principal
+            </a>
+            <a
+              href="/admin/metrics"
+              className="text-xs font-medium opacity-90 hover:opacity-100 transition-opacity"
+            >
+              Métricas
+            </a>
+          </nav>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-1">
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          <div className="bg-primary text-primary-foreground rounded-lg p-4 shadow-sm">
+            <p className="text-2xl font-bold">{totalAdmins}</p>
+            <p className="text-xs mt-0.5 opacity-75">Administradores</p>
+          </div>
+          <div className="bg-accent text-white rounded-lg p-4 shadow-sm">
+            <p className="text-2xl font-bold">{activeAdmins}</p>
+            <p className="text-xs mt-0.5 opacity-75">Activos</p>
+          </div>
+          <div className="bg-secondary text-foreground rounded-lg p-4 shadow-sm">
+            <p className="text-2xl font-bold">{pendingPassword}</p>
+            <p className="text-xs mt-0.5 opacity-75">Cambio de contraseña pendiente</p>
+          </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Crear nuevo admin */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Crear nuevo admin — 1 col */}
           <div>
             <CreateAdminForm />
           </div>
 
-          {/* Lista de admins */}
-          <div>
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4">
-                Administradores registrados
-              </h2>
-              <AdminsList admins={admins} currentUserEmail={session.email} />
-            </Card>
+          {/* Lista de admins — 2 cols */}
+          <div className="lg:col-span-2">
+            <AdminsList admins={admins} currentUserEmail={session.email} />
           </div>
         </div>
-      </div>
+      </main>
+
+      <footer className="border-t border-border py-4 text-center text-xs text-muted-foreground">
+        FECTI &copy; 2025 &mdash; Panel de administración
+      </footer>
     </div>
   )
 }

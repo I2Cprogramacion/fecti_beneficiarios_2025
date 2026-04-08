@@ -2,10 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export function CreateAdminForm() {
   const router = useRouter()
@@ -60,53 +57,64 @@ export function CreateAdminForm() {
   }
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-semibold text-foreground mb-4">Crear nuevo administrador</h2>
+    <div className="bg-card border border-border rounded-lg shadow-sm">
+      <div className="px-5 py-4 border-b border-border">
+        <h2 className="text-sm font-bold text-foreground">Nuevo Administrador</h2>
+        <p className="text-xs text-muted-foreground">Asigna acceso al panel de administración</p>
+      </div>
 
-      {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+      <div className="p-5">
+        {error && (
+          <div className="mb-4 px-3 py-2 rounded bg-destructive/10 border border-destructive/20">
+            <p className="text-xs text-destructive">{error}</p>
+          </div>
+        )}
 
-      {success && (
-        <Alert className="mb-4 border-green-200 bg-green-50">
-          <AlertDescription className="text-green-800">{success}</AlertDescription>
-        </Alert>
-      )}
+        {success && (
+          <div className="mb-4 px-3 py-2 rounded bg-green-50 border border-green-200">
+            <p className="text-xs text-green-700">{success}</p>
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Email</label>
-          <Input
-            type="email"
-            placeholder="admin@example.com"
-            value={email}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-            required
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-xs font-medium text-foreground block mb-1">Correo electrónico</label>
+            <Input
+              type="email"
+              placeholder="admin@example.com"
+              value={email}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+              required
+              disabled={loading}
+              className="text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-foreground block mb-1">Contraseña inicial</label>
+            <Input
+              type="password"
+              placeholder="Contraseña temporal"
+              value={password}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+              className="text-sm"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              El usuario deberá cambiar la contraseña al primer inicio de sesión
+            </p>
+          </div>
+
+          <button
+            type="submit"
             disabled={loading}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Contraseña inicial</label>
-          <Input
-            type="password"
-            placeholder="Contraseña temporal"
-            value={password}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-            required
-            disabled={loading}
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            El usuario deberá cambiar la contraseña al primer login
-          </p>
-        </div>
-
-        <Button type="submit" disabled={loading} className="w-full">
-          {loading ? 'Creando...' : 'Crear administrador'}
-        </Button>
-      </form>
-    </Card>
+            className="w-full bg-primary text-primary-foreground text-xs font-medium px-4 py-2.5 rounded hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            {loading ? 'Creando...' : 'Crear administrador'}
+          </button>
+        </form>
+      </div>
+    </div>
   )
 }

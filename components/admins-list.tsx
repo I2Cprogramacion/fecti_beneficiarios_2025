@@ -38,39 +38,67 @@ export function AdminsList({ admins, currentUserEmail }: AdminsListProps) {
   }
 
   if (admins.length === 0) {
-    return <p className="text-muted-foreground text-sm">No hay administradores registrados</p>
+    return (
+      <div className="bg-card border border-border rounded-lg shadow-sm py-12 text-center text-sm text-muted-foreground">
+        No hay administradores registrados.
+      </div>
+    )
   }
 
   return (
     <>
-      <div className="space-y-3">
-        {admins.map((admin) => (
-          <div
-            key={admin.id}
-            className="p-3 bg-muted rounded-lg border border-border flex items-start justify-between"
-          >
-            <div className="flex-1">
-              <p className="font-medium text-foreground">{admin.email}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Creado: {new Date(admin.created_at).toLocaleDateString('es-MX')}
-              </p>
-              {admin.must_change_password && (
-                <p className="text-xs text-yellow-600 mt-1">
-                  ⚠️ Debe cambiar contraseña
-                </p>
-              )}
-            </div>
-            {admin.email !== currentUserEmail && (
-              <button
-                onClick={() => setDeleteModal(admin)}
-                className="ml-3 text-xs text-red-600 hover:underline whitespace-nowrap"
-                title="Eliminar administrador"
-              >
-                Eliminar
-              </button>
-            )}
-          </div>
-        ))}
+      <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-border">
+          <h2 className="text-sm font-bold text-foreground">Administradores Registrados</h2>
+          <p className="text-xs text-muted-foreground">{admins.length} usuario{admins.length !== 1 ? 's' : ''}</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-secondary border-b border-border">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Correo</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground hidden sm:table-cell">Estado</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden md:table-cell">Creado</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {admins.map((admin, i) => (
+                <tr key={admin.id} className={`border-b border-border last:border-0 ${i % 2 !== 0 ? 'bg-secondary/30' : ''}`}>
+                  <td className="px-4 py-3 text-xs">
+                    <span className="font-medium text-foreground">{admin.email}</span>
+                    {admin.email === currentUserEmail && (
+                      <span className="ml-2 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">Tú</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-center hidden sm:table-cell">
+                    {admin.must_change_password ? (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Pendiente</span>
+                    ) : (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Activo</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">
+                    {new Date(admin.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {admin.email !== currentUserEmail ? (
+                      <button
+                        onClick={() => setDeleteModal(admin)}
+                        className="text-xs text-red-600 hover:underline"
+                        title="Eliminar administrador"
+                      >
+                        Eliminar
+                      </button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}
