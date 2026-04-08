@@ -170,6 +170,12 @@ export function AdminDashboard({
             </div>
           </div>
           <nav className="flex items-center gap-4">
+            <a
+              href="/admin/metrics"
+              className="text-xs font-medium opacity-90 hover:opacity-100 transition-opacity"
+            >
+              Métricas
+            </a>
             {manageUsersUrl && (
               <a
                 href={manageUsersUrl}
