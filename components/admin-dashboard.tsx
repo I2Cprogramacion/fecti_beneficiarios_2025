@@ -61,6 +61,18 @@ export function AdminDashboard({
   // Excel preview modal
   const [previewModal, setPreviewModal] = useState<Project | null>(null)
 
+  // Prevent body scroll when modal is open
+  React.useEffect(() => {
+    if (previewModal) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [previewModal])
+
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/admin')
@@ -482,7 +494,7 @@ export function AdminDashboard({
 
       {/* Excel Preview Modal */}
       {previewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-2 py-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-2 py-2 overflow-hidden">
           <div className="bg-card border border-border rounded-lg shadow-2xl w-full flex flex-col" style={{ aspectRatio: '16 / 9', maxHeight: '90vh' }}>
             {/* Modal Header */}
             <div className="bg-primary text-primary-foreground p-4 flex-shrink-0 border-b border-border flex items-center justify-between">
@@ -500,7 +512,7 @@ export function AdminDashboard({
             </div>
 
             {/* Modal Content - Excel Preview */}
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-auto w-full">
               <ExcelPreviewInline projectId={previewModal.id} />
             </div>
           </div>

@@ -138,7 +138,7 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full min-h-96">
+      <div className="flex items-center justify-center w-full h-full">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
           <p className="text-sm text-muted-foreground">Cargando archivo editable...</p>
@@ -149,7 +149,7 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full min-h-96">
+      <div className="flex items-center justify-center w-full h-full">
         <div className="text-center">
           <p className="text-destructive mb-2 text-sm">Error al cargar el archivo</p>
           <p className="text-xs text-muted-foreground">{error}</p>
@@ -161,10 +161,10 @@ export function ExcelPreviewInline({ projectId }: ExcelPreviewInlineProps) {
   return (
     <div
       ref={containerRef}
-      className="w-full overflow-auto bg-white rounded"
+      className="w-full h-full bg-white"
       style={{ 
-        minHeight: '500px',
-        maxHeight: 'calc(100vh - 200px)'
+        minHeight: '100%',
+        minWidth: '100%'
       }}
     />
   )
