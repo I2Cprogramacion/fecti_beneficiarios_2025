@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useTransition } from 'react'
+import { useState, useRef, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ExcelPreviewInline } from './excel-preview-inline'
 
@@ -62,7 +62,7 @@ export function AdminDashboard({
   const [previewModal, setPreviewModal] = useState<Project | null>(null)
 
   // Prevent body scroll when modal is open
-  React.useEffect(() => {
+  useEffect(() => {
     if (previewModal) {
       document.body.style.overflow = 'hidden'
     } else {
