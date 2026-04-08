@@ -320,9 +320,9 @@ export function AdminDashboard({
                         {p.submitted && (
                           <>
                             <button
-                              onClick={() => window.open(`/admin/preview/${p.id}`, '_blank', 'width=1200,height=700')}
+                              onClick={() => window.open(`/admin/preview/${p.id}`, '_blank')}
                               className="text-xs text-accent hover:underline"
-                              title="Ver archivo editable en nueva ventana"
+                              title="Ver archivo editable en pantalla completa"
                             >
                               Ver
                             </button>
