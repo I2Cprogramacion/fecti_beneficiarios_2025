@@ -24,39 +24,34 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
 
     const initHandsontable = async () => {
       try {
-        // Wait for DOM to be ready
-        await new Promise(resolve => {
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', resolve)
-          } else {
-            resolve(undefined)
-          }
-        })
-
         if (!isMounted) return
 
+        console.log('Starting Handsontable initialization...')
         setLoading(true)
         setError(null)
 
-        // Ensure container exists
+        // Verify container is available
         if (!containerRef.current) {
-          console.log('Container ref not available, waiting...')
-          await new Promise(resolve => setTimeout(resolve, 100))
-        }
-
-        if (!containerRef.current) {
+          console.error('Container not available at start')
           throw new Error('Container element not found in DOM')
         }
 
-        console.log('Container found:', containerRef.current)
+        console.log('Container found, element:', containerRef.current.tagName)
 
         // Step 1: Ensure CSS is loaded
         if (!document.getElementById('handsontable-css')) {
+          console.log('Loading Handsontable CSS...')
           const link = document.createElement('link')
           link.id = 'handsontable-css'
           link.rel = 'stylesheet'
           link.href = 'https://cdn.jsdelivr.net/npm/handsontable@12.4.0/dist/handsontable.full.min.css'
           document.head.appendChild(link)
+          
+          // Wait for CSS to load
+          await new Promise(resolve => {
+            link.onload = resolve
+            setTimeout(resolve, 500) // Fallback
+          })
         }
 
         // Step 2: Ensure JS is loaded
@@ -66,30 +61,41 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
           await new Promise<void>((resolve, reject) => {
             const script = document.createElement('script')
             script.src = 'https://cdn.jsdelivr.net/npm/handsontable@12.4.0/dist/handsontable.full.min.js'
-            script.async = false
+            script.async = true
+            
+            const timeout = setTimeout(() => {
+              reject(new Error('Handsontable script loading timeout'))
+            }, 10000)
             
             script.onload = () => {
-              console.log('Handsontable script loaded')
-              if (typeof window.Handsontable !== 'undefined') {
-                console.log('Handsontable is available')
-                resolve()
-              } else {
-                reject(new Error('Handsontable not available after script load'))
-              }
+              clearTimeout(timeout)
+              console.log('Handsontable script loaded, checking availability...')
+              // Give Handsontable time to be available
+              setTimeout(() => {
+                if (typeof window.Handsontable !== 'undefined') {
+                  console.log('Handsontable is available')
+                  resolve()
+                } else {
+                  reject(new Error('Handsontable not available after script load'))
+                }
+              }, 100)
             }
             
             script.onerror = () => {
+              clearTimeout(timeout)
               reject(new Error('Failed to load Handsontable script'))
             }
             
             document.body.appendChild(script)
           })
+        } else {
+          console.log('Handsontable already loaded')
         }
 
         if (!isMounted) return
 
         // Step 3: Fetch Excel file
-        console.log('Fetching Excel file...')
+        console.log('Fetching Excel file for projectId:', projectId)
         const res = await fetch(`/api/admin/download?projectId=${projectId}`)
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: No se pudo descargar el archivo`)
@@ -117,19 +123,27 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
         if (!isMounted) return
 
         // Step 5: Initialize Handsontable
-        console.log('Initializing Handsontable...')
+        console.log('Initializing Handsontable with data, rows:', data.length)
         
-        // Double check container
+        // Final container check
         if (!containerRef.current) {
-          throw new Error('Container element lost during initialization')
+          throw new Error('Container element disappeared during initialization')
         }
 
         if (typeof window.Handsontable !== 'function') {
           throw new Error(`Handsontable is not a function: ${typeof window.Handsontable}`)
         }
 
+        console.log('Container dimensions:', {
+          width: containerRef.current.clientWidth,
+          height: containerRef.current.clientHeight,
+          offsetParent: containerRef.current.offsetParent
+        })
+
+        // Clear any previous content
         containerRef.current.innerHTML = ''
 
+        // Create Handsontable instance
         hotRef.current = new window.Handsontable(containerRef.current, {
           data: data || [],
           rowHeaders: true,
@@ -182,17 +196,15 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
       }
     }
 
-    // Use requestAnimationFrame to ensure DOM is ready
-    const frameId = requestAnimationFrame(() => {
-      initHandsontable()
-    })
+    // Trigger initialization immediately when component mounts
+    initHandsontable()
 
     return () => {
       isMounted = false
-      cancelAnimationFrame(frameId)
       if (hotRef.current) {
         try {
           hotRef.current.destroy()
+          console.log('Handsontable instance destroyed')
         } catch (e) {
           console.error('Cleanup error:', e)
         }
@@ -234,10 +246,16 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
         <span className="text-xs text-muted-foreground px-2">Edición en tiempo real • Ctrl+Z para deshacer • Ctrl+C/V para copiar/pegar</span>
       </div>
 
-      {/* Main content area */}
-      <div className="flex-1 overflow-hidden p-2">
+      {/* Main content area - relative positioning for loading overlay */}
+      <div className="flex-1 overflow-hidden p-2 bg-background relative">
+        {/* Container siempre en DOM y visible para que Handsontable pueda renderizar */}
+        <div
+          ref={containerRef}
+          className="w-full h-full bg-white rounded border border-border overflow-hidden"
+        />
+
         {loading && (
-          <div className="flex items-center justify-center h-full">
+          <div className="absolute inset-2 flex items-center justify-center bg-white/90 rounded">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-3"></div>
               <p className="text-sm text-muted-foreground">Cargando archivo editable...</p>
@@ -246,7 +264,7 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
         )}
 
         {error && (
-          <div className="flex items-center justify-center h-full">
+          <div className="absolute inset-2 flex items-center justify-center bg-white/90 rounded">
             <div className="text-center bg-destructive/10 border border-destructive/50 rounded-lg p-6 max-w-md">
               <p className="text-destructive mb-2 text-sm font-semibold">Error al cargar el archivo</p>
               <p className="text-xs text-muted-foreground mb-4">{error}</p>
@@ -258,13 +276,6 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
               </button>
             </div>
           </div>
-        )}
-
-        {!loading && !error && (
-          <div
-            ref={containerRef}
-            className="w-full h-full bg-white rounded border border-border overflow-hidden"
-          />
         )}
       </div>
     </div>
