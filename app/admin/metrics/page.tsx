@@ -65,16 +65,118 @@ async function getFinancialSummary() {
   return rows[0]
 }
 
+// Proyectos sin actividad: usuario asignado hace >7 días sin subir archivo
+async function getInactiveProjects() {
+  return sql`
+    SELECT
+      p.clave,
+      p.titulo,
+      p.componente,
+      p.monto,
+      u.email AS assigned_email,
+      u.created_at AS user_created_at,
+      EXTRACT(DAY FROM NOW() - u.created_at)::int AS days_since_assigned
+    FROM projects p
+    JOIN users u ON u.project_id = p.id AND u.role = 'beneficiary'
+    LEFT JOIN submissions s ON s.project_id = p.id
+    WHERE s.id IS NULL
+    ORDER BY u.created_at ASC
+  `
+}
+
+// Entregas acumuladas por día
+async function getDailySubmissions() {
+  return sql`
+    SELECT
+      TO_CHAR(s.uploaded_at, 'YYYY-MM-DD') AS date,
+      COUNT(*)::int AS count
+    FROM submissions s
+    GROUP BY TO_CHAR(s.uploaded_at, 'YYYY-MM-DD')
+    ORDER BY date ASC
+  `
+}
+
+// Tiempo promedio de respuesta (días entre asignación de usuario y entrega)
+async function getResponseTimeMetrics() {
+  const rows = await sql`
+    SELECT
+      ROUND(AVG(EXTRACT(EPOCH FROM (s.uploaded_at - u.created_at)) / 86400), 1) AS avg_days,
+      ROUND(MIN(EXTRACT(EPOCH FROM (s.uploaded_at - u.created_at)) / 86400), 1) AS min_days,
+      ROUND(MAX(EXTRACT(EPOCH FROM (s.uploaded_at - u.created_at)) / 86400), 1) AS max_days,
+      COUNT(*)::int AS total_with_both
+    FROM submissions s
+    JOIN users u ON u.project_id = s.project_id AND u.role = 'beneficiary'
+  `
+  return rows[0] || { avg_days: 0, min_days: 0, max_days: 0, total_with_both: 0 }
+}
+
+// Top 10 proyectos por monto
+async function getTopProjectsByAmount() {
+  return sql`
+    SELECT
+      p.clave,
+      p.titulo,
+      p.componente,
+      p.monto,
+      CASE WHEN s.id IS NOT NULL THEN TRUE ELSE FALSE END AS submitted
+    FROM projects p
+    LEFT JOIN submissions s ON s.project_id = p.id
+    ORDER BY p.monto DESC
+    LIMIT 10
+  `
+}
+
+// Distribución por rango de monto
+async function getAmountDistribution() {
+  return sql`
+    SELECT
+      CASE
+        WHEN p.monto <= 500000 THEN '$0 - $500K'
+        WHEN p.monto <= 1000000 THEN '$500K - $1M'
+        WHEN p.monto <= 1500000 THEN '$1M - $1.5M'
+        ELSE '$1.5M - $2.5M'
+      END AS rango,
+      CASE
+        WHEN p.monto <= 500000 THEN 1
+        WHEN p.monto <= 1000000 THEN 2
+        WHEN p.monto <= 1500000 THEN 3
+        ELSE 4
+      END AS sort_order,
+      COUNT(*)::int AS total,
+      COUNT(s.id)::int AS submitted,
+      SUM(p.monto)::numeric AS monto_total
+    FROM projects p
+    LEFT JOIN submissions s ON s.project_id = p.id
+    GROUP BY rango, sort_order
+    ORDER BY sort_order
+  `
+}
+
 export default async function AdminMetricsPage() {
   const session = await getSession()
   if (!session || session.role !== 'admin') redirect('/admin')
   if (session.mustChangePassword) redirect('/admin/change-password')
 
-  const [componentMetrics, userAssignment, recentActivity, financial] = await Promise.all([
+  const [
+    componentMetrics,
+    userAssignment,
+    recentActivity,
+    financial,
+    inactiveProjects,
+    dailySubmissions,
+    responseTime,
+    topProjects,
+    amountDistribution,
+  ] = await Promise.all([
     getComponentMetrics(),
     getUserAssignmentMetrics(),
     getRecentActivity(),
     getFinancialSummary(),
+    getInactiveProjects(),
+    getDailySubmissions(),
+    getResponseTimeMetrics(),
+    getTopProjectsByAmount(),
+    getAmountDistribution(),
   ])
 
   return (
@@ -83,6 +185,11 @@ export default async function AdminMetricsPage() {
       userAssignment={userAssignment[0]}
       recentActivity={recentActivity}
       financial={financial}
+      inactiveProjects={inactiveProjects}
+      dailySubmissions={dailySubmissions}
+      responseTime={responseTime}
+      topProjects={topProjects}
+      amountDistribution={amountDistribution}
       adminEmail={session.email}
     />
   )

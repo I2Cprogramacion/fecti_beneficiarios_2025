@@ -35,11 +35,53 @@ interface Financial {
   total_submitted: number
 }
 
+interface InactiveProject {
+  clave: string
+  titulo: string
+  componente: string
+  monto: number
+  assigned_email: string
+  user_created_at: string
+  days_since_assigned: number
+}
+
+interface DailySubmission {
+  date: string
+  count: number
+}
+
+interface ResponseTime {
+  avg_days: number
+  min_days: number
+  max_days: number
+  total_with_both: number
+}
+
+interface TopProject {
+  clave: string
+  titulo: string
+  componente: string
+  monto: number
+  submitted: boolean
+}
+
+interface AmountRange {
+  rango: string
+  total: number
+  submitted: number
+  monto_total: number
+}
+
 interface AdminMetricsProps {
   componentMetrics: ComponentMetric[]
   userAssignment: UserAssignment
   recentActivity: RecentActivityItem[]
   financial: Financial
+  inactiveProjects: InactiveProject[]
+  dailySubmissions: DailySubmission[]
+  responseTime: ResponseTime
+  topProjects: TopProject[]
+  amountDistribution: AmountRange[]
   adminEmail: string
 }
 
@@ -63,6 +105,11 @@ export function AdminMetrics({
   userAssignment,
   recentActivity,
   financial,
+  inactiveProjects,
+  dailySubmissions,
+  responseTime,
+  topProjects,
+  amountDistribution,
   adminEmail,
 }: AdminMetricsProps) {
   const router = useRouter()
@@ -257,6 +304,179 @@ export function AdminMetrics({
               </tr>
             </tfoot>
           </table>
+        </div>
+
+        {/* Tiempo promedio de respuesta */}
+        <h2 className="text-lg font-bold text-foreground mb-4">Tiempo de Respuesta</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+          <MetricCard
+            value={responseTime.total_with_both > 0 ? `${responseTime.avg_days} días` : 'N/A'}
+            label="Promedio entre asignación y entrega"
+            className="bg-primary text-primary-foreground"
+          />
+          <MetricCard
+            value={responseTime.total_with_both > 0 ? `${responseTime.min_days} días` : 'N/A'}
+            label="Más rápido"
+            className="bg-green-50 text-green-800 border border-green-200"
+          />
+          <MetricCard
+            value={responseTime.total_with_both > 0 ? `${responseTime.max_days} días` : 'N/A'}
+            label="Más lento"
+            className="bg-amber-50 text-amber-800 border border-amber-200"
+          />
+          <MetricCard
+            value={responseTime.total_with_both}
+            label="Entregas con usuario asignado"
+            className="bg-secondary text-foreground"
+          />
+        </div>
+
+        {/* Entregas acumuladas por día */}
+        <h2 className="text-lg font-bold text-foreground mb-4">Entregas por Día</h2>
+        <div className="bg-card border border-border rounded-lg p-5 shadow-sm mb-8">
+          {dailySubmissions.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Aún no hay entregas registradas.</p>
+          ) : (
+            <>
+              <div className="flex items-end gap-1 h-40 mb-3">
+                {(() => {
+                  const maxCount = Math.max(...dailySubmissions.map(d => d.count))
+                  return dailySubmissions.map((d, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1 min-w-0">
+                      <span className="text-[10px] font-mono text-foreground font-semibold">{d.count}</span>
+                      <div
+                        className="w-full bg-primary rounded-t transition-all min-h-[4px]"
+                        style={{ height: `${(d.count / maxCount) * 100}%` }}
+                        title={`${d.date}: ${d.count} entrega${d.count !== 1 ? 's' : ''}`}
+                      />
+                    </div>
+                  ))
+                })()}
+              </div>
+              <div className="flex gap-1">
+                {dailySubmissions.map((d, i) => (
+                  <div key={i} className="flex-1 text-center min-w-0">
+                    <span className="text-[9px] text-muted-foreground font-mono block truncate">
+                      {new Date(d.date + 'T12:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-3 text-center">
+                Total acumulado: {dailySubmissions.reduce((sum, d) => sum + d.count, 0)} entregas en {dailySubmissions.length} día{dailySubmissions.length !== 1 ? 's' : ''}
+              </p>
+            </>
+          )}
+        </div>
+
+        {/* Distribución por rango de monto */}
+        <h2 className="text-lg font-bold text-foreground mb-4">Distribución por Rango de Monto</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+          {amountDistribution.map((r) => (
+            <div key={r.rango} className="bg-card border border-border rounded-lg p-4 shadow-sm">
+              <p className="text-sm font-bold text-foreground mb-1">{r.rango}</p>
+              <p className="text-2xl font-bold text-primary">{r.total}</p>
+              <p className="text-xs text-muted-foreground">proyecto{r.total !== 1 ? 's' : ''}</p>
+              <div className="w-full bg-secondary rounded-full h-2 mt-2 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-green-500"
+                  style={{ width: `${r.total > 0 ? (r.submitted / r.total) * 100 : 0}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {r.submitted}/{r.total} entregados · {formatMoney(Number(r.monto_total))}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Top 10 proyectos por monto */}
+        <h2 className="text-lg font-bold text-foreground mb-4">Top 10 Proyectos por Monto</h2>
+        <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden mb-8">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-secondary border-b border-border">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">#</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Proyecto</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden sm:table-cell">Componente</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Monto</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Estatus</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topProjects.map((p, i) => (
+                <tr key={p.clave} className={`border-b border-border last:border-0 ${i % 2 === 0 ? '' : 'bg-secondary/30'}`}>
+                  <td className="px-4 py-3 text-xs font-bold text-primary">{i + 1}</td>
+                  <td className="px-4 py-3 text-xs max-w-xs">
+                    <span className="font-mono text-[10px] text-muted-foreground block">{p.clave}</span>
+                    <span className="line-clamp-1">{p.titulo}</span>
+                  </td>
+                  <td className="px-4 py-3 text-xs hidden sm:table-cell">
+                    <span className="bg-primary/10 text-primary font-medium px-1.5 py-0.5 rounded text-[10px]">{p.componente}</span>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-right font-mono font-semibold">{formatMoneyFull(Number(p.monto))}</td>
+                  <td className="px-4 py-3 text-center">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      p.submitted ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {p.submitted ? 'Entregado' : 'Pendiente'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Proyectos sin actividad (alerta) */}
+        <h2 className="text-lg font-bold text-foreground mb-1">Proyectos Sin Actividad</h2>
+        <p className="text-xs text-muted-foreground mb-4">Usuarios asignados que aún no han subido su archivo</p>
+        <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden mb-8">
+          {inactiveProjects.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              🎉 Todos los usuarios asignados han entregado su archivo.
+            </div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-secondary border-b border-border">
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Proyecto</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden md:table-cell">Correo</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground hidden sm:table-cell">Componente</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Días sin actividad</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inactiveProjects.map((p, i) => {
+                  const isUrgent = p.days_since_assigned >= 14
+                  const isWarning = p.days_since_assigned >= 7
+                  return (
+                    <tr key={p.clave} className={`border-b border-border last:border-0 ${i % 2 === 0 ? '' : 'bg-secondary/30'}`}>
+                      <td className="px-4 py-3 text-xs max-w-xs">
+                        <span className="font-mono text-[10px] text-muted-foreground block">{p.clave}</span>
+                        <span className="line-clamp-1">{p.titulo}</span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{p.assigned_email}</td>
+                      <td className="px-4 py-3 text-xs hidden sm:table-cell">
+                        <span className="bg-primary/10 text-primary font-medium px-1.5 py-0.5 rounded text-[10px]">{p.componente}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                          isUrgent
+                            ? 'bg-red-100 text-red-700'
+                            : isWarning
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {p.days_since_assigned} día{p.days_since_assigned !== 1 ? 's' : ''}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
 
         {/* Actividad reciente */}
