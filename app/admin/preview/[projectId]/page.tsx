@@ -1,46 +1,70 @@
-import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
-import { sql } from '@/lib/db'
+'use client'
+
+import { useEffect, useState } from 'react'
 import { ExcelPreviewPage } from '@/components/excel-preview-page'
 import { CloseButton } from '@/components/close-button'
+import { useParams } from 'next/navigation'
 
-async function getSubmission(projectId: string) {
-  try {
-    const rows = await sql`
-      SELECT p.clave, p.titulo, s.file_pathname
-      FROM submissions s
-      JOIN projects p ON p.id = s.project_id
-      WHERE s.project_id = ${projectId}
-    `
-    return rows[0] ?? null
-  } catch {
-    return null
-  }
+interface Submission {
+  clave: string
+  titulo: string
+  file_pathname: string
 }
 
-export default async function PreviewPage({
-  params,
-}: {
-  params: Promise<{ projectId: string }>
-}) {
-  const session = await getSession()
-  if (!session || session.role !== 'admin') redirect('/admin')
+export default function PreviewPage() {
+  const params = useParams()
+  const projectId = params.projectId as string
+  const [submission, setSubmission] = useState<Submission | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const { projectId } = await params
-  const submission = await getSubmission(projectId)
+  useEffect(() => {
+    const fetchSubmission = async () => {
+      try {
+        setLoading(true)
+        const res = await fetch(`/api/admin/download?projectId=${projectId}&metadata=true`)
+        
+        if (!res.ok) {
+          throw new Error('No se pudo obtener el archivo')
+        }
 
-  if (!submission) {
+        // Try to get submission data from the response headers or from an API call
+        const submissionRes = await fetch(`/api/admin/submission?projectId=${projectId}`)
+        if (!submissionRes.ok) {
+          throw new Error('No se pudo obtener los datos de la presentación')
+        }
+
+        const data = await submissionRes.json()
+        setSubmission(data)
+      } catch (err) {
+        console.error('Error:', err)
+        setError(err instanceof Error ? err.message : 'Error desconocido')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSubmission()
+  }, [projectId])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-3"></div>
+          <p className="text-sm text-muted-foreground">Cargando...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !submission) {
     return (
       <div className="min-h-screen bg-background p-6 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-2">Archivo no encontrado</h1>
-          <p className="text-muted-foreground mb-4">No hay archivo subido para este proyecto</p>
-          <button
-            onClick={() => window.close()}
-            className="text-primary hover:underline text-sm"
-          >
-            Cerrar ventana
-          </button>
+          <p className="text-muted-foreground mb-4">{error || 'No hay archivo subido para este proyecto'}</p>
+          <CloseButton />
         </div>
       </div>
     )
