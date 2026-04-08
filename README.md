@@ -4,7 +4,7 @@ Plataforma de reporteo para beneficiarios del **Fondo Estatal de Ciencia, Tecnol
 
 ## Descripción
 
-Sistema web que permite a los beneficiarios de los 62 proyectos aprobados del FECTI 2025 subir sus reportes financieros en formato Excel, y a los administradores del I2C revisar, descargar y dar seguimiento al avance de entrega por componente.
+Sistema web que permite a los beneficiarios de los 62 proyectos aprobados del FECTI 2025 subir sus reportes financieros en formato Excel, y a los administradores del IIC revisar, descargar y dar seguimiento al avance de entrega por componente.
 
 ### Componentes del FECTI
 
