@@ -24,10 +24,13 @@ export async function GET(request: NextRequest) {
 
     if (!result) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    // Convert Readable stream to Buffer
-    const chunks: Buffer[] = []
-    for await (const chunk of result.stream) {
-      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+    // Convert ReadableStream to Buffer via getReader()
+    const reader = result.stream.getReader()
+    const chunks: Uint8Array[] = []
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      if (value) chunks.push(value)
     }
     const buffer = Buffer.concat(chunks)
     const base64 = buffer.toString('base64')
