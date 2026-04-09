@@ -10,7 +10,7 @@ export async function GET() {
     }
 
     const projects = await sql`
-      SELECT id, title, principal_investigator, institution, status 
+      SELECT id, num, clave, componente, titulo, monto
       FROM projects 
       ORDER BY id ASC
     `

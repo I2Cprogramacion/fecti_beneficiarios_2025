@@ -10,7 +10,7 @@ export async function GET() {
     }
 
     const submissions = await sql`
-      SELECT id, project_id, user_id, file_type, uploaded_at 
+      SELECT id, project_id, file_name, file_pathname, uploaded_at 
       FROM submissions 
       ORDER BY uploaded_at DESC 
       LIMIT 100

@@ -27,7 +27,7 @@ export async function GET() {
       ORDER BY created_at DESC
     `
     return NextResponse.json({ users })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Error al obtener usuarios' }, { status: 500 })
   }
 }
