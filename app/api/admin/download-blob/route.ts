@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       access: 'private',
     })
 
-    if (!result) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    if (!result || !result.stream) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
     // Convert ReadableStream to Buffer via getReader()
     const reader = result.stream.getReader()
