@@ -11,7 +11,7 @@ async function getAdminUsers() {
       FROM users
       WHERE role = 'admin'
       ORDER BY created_at DESC
-    `
+    ` as { id: number; email: string; role: string; must_change_password: boolean; created_at: string }[]
     return users
   } catch {
     return []

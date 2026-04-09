@@ -151,14 +151,14 @@ export default async function AdminMetricsPage() {
     responseTime,
     amountDistribution,
   ] = await Promise.all([
-    getComponentMetrics(),
-    getUserAssignmentMetrics(),
-    getRecentActivity(),
-    getFinancialSummary(),
-    getInactiveProjects(),
-    getDailySubmissions(),
-    getResponseTimeMetrics(),
-    getAmountDistribution(),
+    getComponentMetrics() as Promise<{ componente: string; total: number; submitted: number; pending: number; progress: number; monto_total: number; monto_entregado: number }[]>,
+    getUserAssignmentMetrics() as Promise<{ total_projects: number; assigned: number; unassigned: number; pending_password_change: number }[]>,
+    getRecentActivity() as Promise<{ uploaded_at: string; file_name: string; clave: string; titulo: string; componente: string }[]>,
+    getFinancialSummary() as Promise<{ monto_total_aprobado: number; monto_con_entrega: number; monto_pendiente: number; total_projects: number; total_submitted: number }>,
+    getInactiveProjects() as Promise<{ clave: string; titulo: string; componente: string; monto: number; assigned_email: string; user_created_at: string; days_since_assigned: number }[]>,
+    getDailySubmissions() as Promise<{ date: string; count: number }[]>,
+    getResponseTimeMetrics() as Promise<{ avg_days: number; min_days: number; max_days: number; total_with_both: number }>,
+    getAmountDistribution() as Promise<{ rango: string; total: number; submitted: number; monto_total: number }[]>,
   ])
 
   return (

@@ -14,7 +14,7 @@ export default async function ProjectPage({ params }: Props) {
   const { id } = await params
   const projectRows = await sql`
     SELECT * FROM projects WHERE id = ${parseInt(id)}
-  `
+  ` as { id: number; title: string; principal_investigator: string; institution: string; status: string; funding_amount: number; start_date: string; end_date: string; description: string }[]
 
   if (!projectRows.length) {
     redirect('/dashboard')
