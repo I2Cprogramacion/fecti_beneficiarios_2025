@@ -21,9 +21,7 @@ async function getProjects() {
       LEFT JOIN submissions s ON s.project_id = p.id
       ORDER BY p.num ASC
     `
-  } catch (error) {
-    // Database not ready yet, return empty array
-    console.log('Database query failed, returning empty array:', error)
+  } catch {
     return []
   }
 }

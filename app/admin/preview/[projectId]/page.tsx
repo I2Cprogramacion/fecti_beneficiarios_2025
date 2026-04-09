@@ -30,8 +30,6 @@ export default function PreviewPage() {
         setLoading(true)
         setError(null)
 
-        console.log('Fetching submission for projectId:', projectId)
-
         const res = await fetch(`/api/admin/submission?projectId=${projectId}`, {
           method: 'GET',
           headers: {
@@ -40,19 +38,13 @@ export default function PreviewPage() {
           credentials: 'include',
         })
 
-        console.log('Submission API response status:', res.status)
-        
         if (!res.ok) {
-          const errorData = await res.text()
-          console.error('API error:', errorData)
           throw new Error(`HTTP ${res.status}`)
         }
 
         const data = await res.json()
-        console.log('Submission data:', data)
         setSubmission(data)
       } catch (err) {
-        console.error('Error fetching submission:', err)
         setError(err instanceof Error ? err.message : 'Error desconocido')
       } finally {
         setLoading(false)

@@ -13,9 +13,7 @@ async function getStats() {
     const [total] = await sql`SELECT COUNT(*) AS count FROM projects`
     const [submitted] = await sql`SELECT COUNT(*) AS count FROM submissions`
     return { total: Number(total.count), submitted: Number(submitted.count) }
-  } catch (error) {
-    // Database not ready yet, return defaults
-    console.log('Database query failed, using defaults:', error)
+  } catch {
     return { total: 0, submitted: 0 }
   }
 }

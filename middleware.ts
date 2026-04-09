@@ -60,6 +60,12 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
+    /*
+     * Match all paths except:
+     * - _next/static, _next/image  (Next.js internals)
+     * - favicon.ico, sitemap.xml, robots.txt
+     * - Static files by extension (images, fonts, PDFs, etc.)
+     */
+    '/((?!_next/static|_next/image|favicon\\.ico|sitemap\\.xml|robots\\.txt|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|woff2?|ttf|eot|pdf)$).*)',
   ],
 }

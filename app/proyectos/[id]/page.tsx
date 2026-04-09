@@ -25,8 +25,7 @@ async function getProject(id: string) {
       WHERE p.id = ${id}
     `
     return rows[0] ?? null
-  } catch (error) {
-    console.log('Database query failed:', error)
+  } catch {
     return null
   }
 }
@@ -35,8 +34,7 @@ async function hasTemplate() {
   try {
     const rows = await sql`SELECT 1 FROM settings WHERE key = 'template_pathname'`
     return rows.length > 0
-  } catch (error) {
-    console.log('Database query failed:', error)
+  } catch {
     return false
   }
 }
@@ -54,13 +52,6 @@ export default async function ProjectPage({
   ])
 
   if (!project) notFound()
-
-  // Debug logging
-  console.log('📍 ProjectPage Debug:')
-  console.log('  Project ID from URL:', id, 'Type:', typeof id)
-  console.log('  Project from DB:', { id: project.id, num: project.num })
-  console.log('  Session:', session)
-  console.log('  Comparison: session?.projectId === project.id?', session?.projectId, '===', project.id, '?', session?.projectId === project.id)
 
   const isOwner = session && session.role === 'beneficiary' && session.projectId === project.id
 
