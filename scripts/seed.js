@@ -69,7 +69,9 @@ async function seed() {
 
     // Create admin users
     console.log('👤 Creating admin users...');
-    const hash = await bcrypt.hash('12345', 10);
+    const pw = process.env.DEFAULT_ADMIN_PASSWORD;
+    if (!pw) throw new Error('DEFAULT_ADMIN_PASSWORD env var required');
+    const hash = await bcrypt.hash(pw, 12);
 
     await sql`
       INSERT INTO users (email, password_hash, role, must_change_password)

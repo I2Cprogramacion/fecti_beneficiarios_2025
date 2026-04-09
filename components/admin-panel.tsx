@@ -43,8 +43,8 @@ export default function AdminPanel({ session }: { session: SessionUser }) {
           const subs = await subRes.json()
           setSubmissions(subs)
         }
-      } catch (err) {
-        console.error('Error fetching admin data:', err)
+      } catch {
+        // silently handle fetch errors
       } finally {
         setLoading(false)
       }

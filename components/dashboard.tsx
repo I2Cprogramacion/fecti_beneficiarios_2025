@@ -26,8 +26,8 @@ export default function Dashboard({ session }: { session: SessionUser }) {
           const data = await res.json()
           setProjects(data)
         }
-      } catch (err) {
-        console.error('Error fetching projects:', err)
+      } catch {
+        // silently handle fetch errors
       } finally {
         setLoading(false)
       }

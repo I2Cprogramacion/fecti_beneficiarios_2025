@@ -32,10 +32,12 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    // Sanitize filename to prevent header injection
+    const safeName = file_name.replace(/["\\\r\n]/g, '_')
     return new NextResponse(result.stream, {
       headers: {
         'Content-Type': result.blob.contentType,
-        'Content-Disposition': `attachment; filename="${file_name}"`,
+        'Content-Disposition': `attachment; filename="${safeName}"`,
         ETag: result.blob.etag,
         'Cache-Control': 'private, no-cache',
       },

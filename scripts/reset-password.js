@@ -12,8 +12,9 @@ const sql = neon(DATABASE_URL);
 
 async function resetPassword() {
   try {
-    const newPassword = '12345'; // Cambia esto a la contraseña deseada
-    const hash = await bcrypt.hash(newPassword, 10);
+    const newPassword = process.env.DEFAULT_ADMIN_PASSWORD;
+    if (!newPassword) throw new Error('DEFAULT_ADMIN_PASSWORD env var required');
+    const hash = await bcrypt.hash(newPassword, 12);
 
     const result = await sql`
       UPDATE users 

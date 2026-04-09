@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json({
       ok: true,
-      user: sessionUser,
+      role: sessionUser.role,
       redirectUrl: redirectUrl,
     })
 

@@ -135,7 +135,9 @@ async function migrate() {
   console.log('62 projects seeded.')
 
   // Seed admin users
-  const adminHash = await bcrypt.hash('12345', 12)
+  const pw = process.env.DEFAULT_ADMIN_PASSWORD
+  if (!pw) throw new Error('DEFAULT_ADMIN_PASSWORD env var required')
+  const adminHash = await bcrypt.hash(pw, 12)
   const admins = [
     ['daron.tarin@i2c.com.mx', adminHash],
     ['fernando.pacheco@i2c.com.mx', adminHash],

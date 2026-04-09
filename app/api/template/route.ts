@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { get } from '@vercel/blob'
 import { sql } from '@/lib/db'
 
+/** Public endpoint — No auth required. Beneficiaries download the template before logging in. */
 export async function GET(request: NextRequest) {
   const rows = await sql`SELECT value FROM settings WHERE key = 'template_pathname'`
   if (!rows.length) {
@@ -30,11 +31,13 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const filename = pathname.split('/').pop() || 'plantilla.xlsx'
+    const rawName = pathname.split('/').pop() || 'plantilla.xlsx'
+    const filename = rawName.replace(/["\\\r\n]/g, '_')
     return new NextResponse(result.stream, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Disposition': `attachment; filename="${filename}"`,
+
         ETag: result.blob.etag,
         'Cache-Control': 'private, no-cache',
       },

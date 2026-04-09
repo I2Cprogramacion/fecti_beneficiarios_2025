@@ -26,21 +26,16 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
       try {
         if (!isMounted) return
 
-        console.log('Starting Handsontable initialization...')
         setLoading(true)
         setError(null)
 
         // Verify container is available
         if (!containerRef.current) {
-          console.error('Container not available at start')
           throw new Error('Container element not found in DOM')
         }
 
-        console.log('Container found, element:', containerRef.current.tagName)
-
         // Step 1: Ensure CSS is loaded
         if (!document.getElementById('handsontable-css')) {
-          console.log('Loading Handsontable CSS...')
           const link = document.createElement('link')
           link.id = 'handsontable-css'
           link.rel = 'stylesheet'
@@ -56,8 +51,6 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
 
         // Step 2: Ensure JS is loaded
         if (typeof window.Handsontable === 'undefined') {
-          console.log('Loading Handsontable script...')
-          
           await new Promise<void>((resolve, reject) => {
             const script = document.createElement('script')
             script.src = 'https://cdn.jsdelivr.net/npm/handsontable@12.4.0/dist/handsontable.full.min.js'
@@ -69,11 +62,8 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
             
             script.onload = () => {
               clearTimeout(timeout)
-              console.log('Handsontable script loaded, checking availability...')
-              // Give Handsontable time to be available
               setTimeout(() => {
                 if (typeof window.Handsontable !== 'undefined') {
-                  console.log('Handsontable is available')
                   resolve()
                 } else {
                   reject(new Error('Handsontable not available after script load'))
@@ -88,25 +78,19 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
             
             document.body.appendChild(script)
           })
-        } else {
-          console.log('Handsontable already loaded')
         }
 
         if (!isMounted) return
 
         // Step 3: Fetch Excel file
-        console.log('Fetching Excel file for projectId:', projectId)
         const res = await fetch(`/api/admin/download-blob?projectId=${projectId}`, {
           credentials: 'include',
         })
         if (!res.ok) {
-          const errorText = await res.text()
-          console.error('Download API error:', errorText)
           throw new Error(`HTTP ${res.status}: No se pudo descargar el archivo`)
         }
 
         const downloadData = await res.json()
-        console.log('Excel file metadata:', { fileName: downloadData.fileName, contentType: downloadData.contentType })
         
         // Convert base64 back to ArrayBuffer
         const binaryString = atob(downloadData.data)
@@ -115,7 +99,6 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
           bytes[i] = binaryString.charCodeAt(i)
         }
         const arrayBuffer = bytes.buffer
-        console.log('Excel file converted, size:', arrayBuffer.byteLength)
 
         // Step 4: Parse Excel
         const { read, utils } = await import('xlsx')
@@ -130,12 +113,9 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
         const worksheet = workbook.Sheets[firstSheetName]
         const data = utils.sheet_to_json(worksheet, { header: 1 }) as any[]
 
-        console.log('Excel data parsed, rows:', data.length)
-
         if (!isMounted) return
 
         // Step 5: Initialize Handsontable
-        console.log('Initializing Handsontable with data, rows:', data.length)
         
         // Final container check
         if (!containerRef.current) {
@@ -145,12 +125,6 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
         if (typeof window.Handsontable !== 'function') {
           throw new Error(`Handsontable is not a function: ${typeof window.Handsontable}`)
         }
-
-        console.log('Container dimensions:', {
-          width: containerRef.current.clientWidth,
-          height: containerRef.current.clientHeight,
-          offsetParent: containerRef.current.offsetParent
-        })
 
         // Clear any previous content
         containerRef.current.innerHTML = ''
@@ -194,13 +168,10 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
           preventOverflow: 'horizontal',
         })
 
-        console.log('Handsontable initialized successfully')
-
         if (isMounted) {
           setLoading(false)
         }
       } catch (err) {
-        console.error('Error:', err)
         if (isMounted) {
           setError(err instanceof Error ? err.message : String(err))
           setLoading(false)
@@ -216,9 +187,8 @@ export function ExcelPreviewPage({ projectId, onClose }: ExcelPreviewPageProps) 
       if (hotRef.current) {
         try {
           hotRef.current.destroy()
-          console.log('Handsontable instance destroyed')
-        } catch (e) {
-          console.error('Cleanup error:', e)
+        } catch {
+          // ignore cleanup errors
         }
       }
     }

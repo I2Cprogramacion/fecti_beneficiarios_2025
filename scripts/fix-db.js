@@ -12,7 +12,8 @@ async function fixDB() {
   console.log('Tables cleaned.')
 
   // Crear 2 admin users con password hasheado
-  const hash = await bcrypt.hash('12345', 10)
+  const pw = process.env.DEFAULT_ADMIN_PASSWORD || (() => { throw new Error('DEFAULT_ADMIN_PASSWORD required') })()
+  const hash = await bcrypt.hash(pw, 12)
   
   await sql`
     INSERT INTO users (email, password_hash, role, must_change_password)
@@ -22,7 +23,7 @@ async function fixDB() {
     INSERT INTO users (email, password_hash, role, must_change_password)
     VALUES ('fernando.pacheco@i2c.com.mx', ${hash}, 'admin', true)
   `
-  console.log('2 admin users created with password: 12345')
+  console.log('2 admin users created')
 
   // Los 62 proyectos FECTI 2025
   const projects = [

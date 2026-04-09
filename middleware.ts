@@ -15,9 +15,15 @@ const PUBLIC_API = new Set([
   '/api/template',
 ])
 
+/** Prefixes that are public (pages that handle their own auth state). */
+const PUBLIC_PREFIXES = ['/proyectos']
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const isPublic = PUBLIC_PATHS.has(pathname) || PUBLIC_API.has(pathname)
+  const isPublic =
+    PUBLIC_PATHS.has(pathname) ||
+    PUBLIC_API.has(pathname) ||
+    PUBLIC_PREFIXES.some(p => pathname.startsWith(p))
 
   if (!isPublic) {
     const cookie = request.cookies.get('session')?.value

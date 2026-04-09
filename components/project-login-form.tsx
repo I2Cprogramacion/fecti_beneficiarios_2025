@@ -37,17 +37,16 @@ export function ProjectLoginForm({ projectId }: { projectId: number }) {
         return
       }
 
-      const user = data.user
-      if (user.role !== 'beneficiary' || user.projectId !== projectId) {
+      // Verify this is the correct beneficiary for this project
+      if (data.role !== 'beneficiary') {
         await fetch('/api/auth/logout', { method: 'POST' })
         setError('Las credenciales no corresponden a este proyecto.')
         setLoading(false)
         return
       }
 
-      // El servidor ya estableció la cookie en la respuesta
-      // Hacer un hard refresh para asegurar que se envíe la cookie en la siguiente solicitud
-      window.location.href = `/proyectos/${projectId}`
+      // Use the redirect URL from the server (it already validates project ownership)
+      window.location.href = data.redirectUrl || `/proyectos/${projectId}`
     } catch (error) {
       setError('Error de conexión: ' + (error instanceof Error ? error.message : 'desconocido'))
     } finally {

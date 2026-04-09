@@ -14,6 +14,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'La contraseña debe tener al menos 8 caracteres.' }, { status: 400 })
   }
 
+  // L1: Enforce complexity — at least one uppercase, one lowercase, one digit
+  const hasUpper = /[A-Z]/.test(newPassword)
+  const hasLower = /[a-z]/.test(newPassword)
+  const hasDigit = /[0-9]/.test(newPassword)
+  if (!hasUpper || !hasLower || !hasDigit) {
+    return NextResponse.json(
+      { error: 'La contraseña debe incluir al menos una mayúscula, una minúscula y un número.' },
+      { status: 400 }
+    )
+  }
+
   const hash = await bcrypt.hash(newPassword, 12)
   await sql`
     UPDATE users SET password_hash = ${hash}, must_change_password = FALSE

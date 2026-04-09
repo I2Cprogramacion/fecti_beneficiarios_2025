@@ -117,7 +117,6 @@ export function LuckysheetViewer({ projectId }: LuckysheetViewerProps) {
           setLoading(false)
         }
       } catch (err) {
-        console.error('Error loading Excel with Luckysheet:', err)
         setError(err instanceof Error ? err.message : 'Error desconocido')
         setLoading(false)
       }
