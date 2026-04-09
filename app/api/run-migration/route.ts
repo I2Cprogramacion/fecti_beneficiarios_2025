@@ -3,8 +3,15 @@ import bcrypt from 'bcryptjs'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 
-export async function POST(request: NextRequest) {
-  // Require admin session
+/** @deprecated Usa /api/admin/migrate — este endpoint duplicado fue deshabilitado (H6). */
+export async function POST() {
+  return NextResponse.json(
+    { error: 'Endpoint deshabilitado. Usa /api/admin/migrate.' },
+    { status: 410 }
+  )
+}
+
+async function _disabled(request: NextRequest) {
   const session = await getSession()
   if (!session || session.role !== 'admin') {
     return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })

@@ -46,7 +46,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const userId = userRows[0].id
-    const passwordHash = await bcrypt.hash(password, 10)
+    const passwordHash = await bcrypt.hash(password, 12)
 
     // Update user
     await sql`

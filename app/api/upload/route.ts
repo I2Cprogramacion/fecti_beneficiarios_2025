@@ -27,7 +27,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const blob = await put(`projects/${projectId}/${fileType}/${file.name}`, file, {
+    // H4-fix: Validate file size (max 10 MB)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: 'El archivo excede el tamaño máximo permitido (10 MB).' },
+        { status: 400 }
+      )
+    }
+
+    // H4-fix: Validate file extension
+    const ext = file.name.split('.').pop()?.toLowerCase()
+    if (!['xls', 'xlsx'].includes(ext ?? '')) {
+      return NextResponse.json(
+        { error: 'Solo se permiten archivos .xls y .xlsx.' },
+        { status: 400 }
+      )
+    }
+
+    // Sanitize filename for storage path
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+
+    const blob = await put(`projects/${projectId}/${fileType}/${safeName}`, file, {
       access: 'private',
     })
 

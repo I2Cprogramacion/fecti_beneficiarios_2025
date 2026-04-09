@@ -2,7 +2,16 @@ import crypto from 'crypto'
 import { cookies } from 'next/headers'
 import { sql } from './db'
 
-const SECRET = process.env.SESSION_SECRET ?? ''
+/** Return the signing secret, failing fast if misconfigured. */
+function getSecret(): string {
+  const s = process.env.SESSION_SECRET
+  if (!s || s.length < 32) {
+    throw new Error(
+      'FATAL: SESSION_SECRET is missing or too short (min 32 chars).'
+    )
+  }
+  return s
+}
 
 export interface SessionUser {
   id: number
@@ -14,7 +23,7 @@ export interface SessionUser {
 
 /** Sign a payload string with HMAC-SHA256 and return the hex digest. */
 function sign(payload: string): string {
-  return crypto.createHmac('sha256', SECRET).update(payload).digest('hex')
+  return crypto.createHmac('sha256', getSecret()).update(payload).digest('hex')
 }
 
 /** Verify that a signature matches the expected HMAC for a payload. */

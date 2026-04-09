@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     httpOnly: true,
     path: '/',
     maxAge: 60 * 60 * 8,
-    sameSite: 'none',
+    sameSite: 'lax',
     secure: true,
   })
   return res

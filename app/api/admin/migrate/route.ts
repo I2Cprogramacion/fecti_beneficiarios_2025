@@ -75,8 +75,15 @@ export async function POST(request: NextRequest) {
 
 
 
-    // Create admin users
-    const hash = await bcrypt.hash('12345', 10)
+    // Create admin users – password from env var (C3-fix: no hardcoded secrets)
+    const defaultPw = process.env.DEFAULT_ADMIN_PASSWORD
+    if (!defaultPw || defaultPw.length < 8) {
+      return NextResponse.json(
+        { error: 'DEFAULT_ADMIN_PASSWORD env var is required (min 8 chars).' },
+        { status: 400 }
+      )
+    }
+    const hash = await bcrypt.hash(defaultPw, 12)
 
     await sql`
       INSERT INTO users (email, password_hash, role, must_change_password)

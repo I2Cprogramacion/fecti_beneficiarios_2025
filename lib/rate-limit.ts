@@ -1,6 +1,10 @@
 /**
- * Simple in-memory rate limiter for login endpoints.
+ * In-memory rate limiter for login endpoints.
  * Limits attempts per IP within a sliding window.
+ *
+ * ⚠️  SERVERLESS LIMITATION: On Vercel, each cold-start gets a fresh Map.
+ *     For production hardening consider Upstash Redis, Vercel KV, or a
+ *     database-backed store.
  */
 
 const store = new Map<string, { count: number; resetAt: number }>()

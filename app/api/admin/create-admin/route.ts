@@ -3,6 +3,15 @@ import { sql } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
 
+/** H5-fix: Superadmin check via env var instead of hardcoded email. */
+function isSuperAdmin(email: string): boolean {
+  const allowed = (process.env.SUPERADMIN_EMAILS ?? '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean)
+  return allowed.includes(email.toLowerCase())
+}
+
 // GET: List all admin users
 export async function GET() {
   const session = await getSession()
@@ -30,8 +39,8 @@ export async function POST(req: NextRequest) {
     if (!session || session.role !== 'admin') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
-    if (session.email !== 'daron.tarin@i2c.com.mx') {
-      return NextResponse.json({ error: 'Solo daron.tarin@i2c.com.mx puede crear administradores' }, { status: 403 })
+    if (!isSuperAdmin(session.email)) {
+      return NextResponse.json({ error: 'No tienes permisos de superadministrador.' }, { status: 403 })
     }
 
     const body = await req.json()
@@ -52,8 +61,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Este email ya está registrado' }, { status: 400 })
     }
 
-    // Hash password
-    const hash = await bcrypt.hash(password, 10)
+    // Hash password (cost factor 12 per OWASP 2025)
+    const hash = await bcrypt.hash(password, 12)
 
     // Create admin user
     const result = await sql`
@@ -85,8 +94,8 @@ export async function DELETE(req: NextRequest) {
     if (!session || session.role !== 'admin') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
-    if (session.email !== 'daron.tarin@i2c.com.mx') {
-      return NextResponse.json({ error: 'Solo daron.tarin@i2c.com.mx puede eliminar administradores' }, { status: 403 })
+    if (!isSuperAdmin(session.email)) {
+      return NextResponse.json({ error: 'No tienes permisos de superadministrador.' }, { status: 403 })
     }
 
     const { searchParams } = new URL(req.url)
