@@ -34,7 +34,7 @@ export default async function AdminDashboardPage() {
   if (session.mustChangePassword) redirect('/admin/change-password')
 
   const [projects, templatePathname] = await Promise.all([
-    getAllProjects(),
+    getAllProjects() as Promise<{ id: number; num: number; clave: string; componente: string; titulo: string; monto: string; assigned_email: string | null; file_name: string | null; uploaded_at: string | null; submitted: boolean }[]>,
     getTemplateInfo(),
   ])
 
