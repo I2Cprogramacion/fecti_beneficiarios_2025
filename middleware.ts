@@ -13,6 +13,7 @@ const PUBLIC_API = new Set([
   '/api/auth/login-json',
   '/api/auth/logout',
   '/api/template',
+  '/api/template-word'
 ])
 
 /** Prefixes that are public (pages that handle their own auth state). */

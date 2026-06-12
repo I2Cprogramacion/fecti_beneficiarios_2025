@@ -4,6 +4,15 @@ import { sql } from '@/lib/db'
 import { CreateAdminForm } from '@/components/create-admin-form'
 import { AdminsList } from '@/components/admins-list'
 
+function isSuperAdmin(email: string): boolean {
+  const allowed = (process.env.SUPERADMIN_EMAILS ?? '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean)
+
+  return allowed.includes(email.trim().toLowerCase())
+}
+
 async function getAdminUsers() {
   try {
     const users = await sql`
@@ -12,6 +21,7 @@ async function getAdminUsers() {
       WHERE role = 'admin'
       ORDER BY created_at DESC
     ` as { id: number; email: string; role: string; must_change_password: boolean; created_at: string }[]
+
     return users
   } catch {
     return []
@@ -20,9 +30,10 @@ async function getAdminUsers() {
 
 export default async function AdminUsersPage() {
   const session = await getSession()
+
   if (!session || session.role !== 'admin') redirect('/admin')
   if (session.mustChangePassword) redirect('/admin/change-password')
-  if (session.email !== 'daron.tarin@i2c.com.mx') redirect('/admin/dashboard')
+  if (!isSuperAdmin(session.email)) redirect('/admin/dashboard')
 
   const admins = await getAdminUsers()
 
