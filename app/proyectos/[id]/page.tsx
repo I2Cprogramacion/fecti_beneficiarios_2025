@@ -23,6 +23,7 @@ async function getProject(id: string) {
       FROM projects p
       LEFT JOIN submissions s ON s.project_id = p.id
       WHERE p.id = ${id}
+      AND p.is_active = TRUE
     `
     return rows[0] ?? null
   } catch {

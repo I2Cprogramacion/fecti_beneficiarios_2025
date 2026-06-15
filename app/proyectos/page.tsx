@@ -19,6 +19,7 @@ async function getProjects() {
         CASE WHEN s.id IS NOT NULL THEN TRUE ELSE FALSE END AS submitted
       FROM projects p
       LEFT JOIN submissions s ON s.project_id = p.id
+      WHERE p.is_active = TRUE
       ORDER BY p.num ASC
     `
   } catch {
