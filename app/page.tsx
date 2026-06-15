@@ -10,8 +10,8 @@ export const dynamic = 'force-dynamic'
 
 async function getStats() {
   try {
-    const [total] = await sql`SELECT COUNT(*) AS count FROM projects`
-    const [submitted] = await sql`SELECT COUNT(*) AS count FROM submissions`
+    const [total] = await sql`SELECT COUNT(*) AS count FROM projects WHERE is_active = TRUE`
+    const [submitted] = await sql`SELECT COUNT(*) AS count FROM submissions s JOIN projects p ON p.id = s.project_id WHERE p.is_active = TRUE`
     return { total: Number(total.count), submitted: Number(submitted.count) }
   } catch {
     return { total: 0, submitted: 0 }
