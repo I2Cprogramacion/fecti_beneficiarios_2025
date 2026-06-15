@@ -39,7 +39,7 @@ async function hasTemplate() {
     return false
   }
 }
-
+// This page is only accessible to admins and the beneficiary of the project
 export default async function ProjectPage({
   params,
 }: {
