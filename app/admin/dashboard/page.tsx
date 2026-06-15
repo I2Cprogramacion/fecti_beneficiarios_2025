@@ -19,6 +19,7 @@ async function getAllProjects() {
     FROM projects p
     LEFT JOIN users u ON u.project_id = p.id AND u.role = 'beneficiary'
     LEFT JOIN submissions s ON s.project_id = p.id
+    WHERE p.is_active = TRUE
     ORDER BY p.num ASC
   `
 }
