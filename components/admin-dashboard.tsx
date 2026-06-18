@@ -16,7 +16,7 @@ interface Project {
   uploaded_at: string | null
   submitted: boolean
 }
-
+//3era prueba
 interface AdminDashboardProps {
   projects: Project[]
   templatePathname: string | null
