@@ -17,6 +17,7 @@ interface Project {
   submitted: boolean
 }
 
+//Interface
 interface AdminDashboardProps {
   projects: Project[]
   templatePathname: string | null
