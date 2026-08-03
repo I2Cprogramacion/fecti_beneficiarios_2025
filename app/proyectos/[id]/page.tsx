@@ -10,24 +10,45 @@ export const dynamic = 'force-dynamic'
 
 const COMPONENT_LABELS: Record<string, string> = {
   'C01-INFRA': 'C01 – Infraestructura',
-  'C02-IBA':   'C02 – Investigación Básica Aplicada',
-  'C03-FT':    'C03 – Formación de Talento',
-  'C04-IYE':   'C04 – Innovación y Emprendimiento',
+  'C02-IBA': 'C02 – Investigación Básica Aplicada',
+  'C03-FT': 'C03 – Formación de Talento',
+  'C04-IYE': 'C04 – Innovación y Emprendimiento',
 }
 
 async function getProject(id: string) {
   try {
     const rows = await sql`
-      SELECT p.id, p.num, p.clave, p.componente, p.titulo, p.monto,
-        s.file_name, s.uploaded_at
+      SELECT
+        p.id,
+        p.num,
+        p.clave,
+        p.componente,
+        p.titulo,
+        p.monto
       FROM projects p
-      LEFT JOIN submissions s ON s.project_id = p.id
       WHERE p.id = ${id}
-      AND p.is_active = TRUE
+        AND p.is_active = TRUE
     `
+
     return rows[0] ?? null
   } catch {
     return null
+  }
+}
+
+async function getSubmissions(projectId: string) {
+  try {
+    return await sql`
+      SELECT
+        id,
+        file_name,
+        uploaded_at
+      FROM submissions
+      WHERE project_id = ${projectId}
+      ORDER BY uploaded_at DESC
+    `
+  } catch {
+    return []
   }
 }
 
@@ -46,10 +67,12 @@ export default async function ProjectPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const [project, templateAvailable, session] = await Promise.all([
+ const [project, templateAvailable, session, submissions] =
+  await Promise.all([
     getProject(id),
     hasTemplate(),
     getSession(),
+    getSubmissions(id),
   ])
 
   if (!project) notFound()
@@ -85,24 +108,60 @@ export default async function ProjectPage({
           )}
         </div>
 
-        {/* Template download - always visible */}
+        {/* Primera plantilla de Excel */}
         <div className="bg-card border border-border rounded-xl p-6 mb-6 shadow-md">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M12 18v-6" /><path d="m9 15 3 3 3-3" /></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-accent"
+              >
+                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                <path d="M12 18v-6" />
+                <path d="m9 15 3 3 3-3" />
+              </svg>
             </div>
+
             <div className="flex-1">
-              <h2 className="text-base font-bold text-foreground mb-1">Plantilla de reporte</h2>
+              <h2 className="text-base font-bold text-foreground mb-1">
+                Plantilla de reporte
+              </h2>
+
               <p className="text-sm text-muted-foreground mb-4">
                 Descarga la plantilla oficial, llénala y vuelve a esta página para subir tu archivo.
               </p>
+
               {templateAvailable ? (
                 <a
                   href="/api/template"
                   className="inline-flex items-center gap-2 bg-accent text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-accent/90 transition-colors shadow-sm"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-                  Descargar plantilla
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+
+                  Descargar plantilla (Comprobación de gastos)
                 </a>
               ) : (
                 <p className="text-sm text-muted-foreground italic">
@@ -113,50 +172,111 @@ export default async function ProjectPage({
           </div>
         </div>
 
-        {/* <div className="bg-card border border-border rounded-xl p-6 mb-6 shadow-md">
+        {/* Segunda plantilla de Excel */}
+        <div className="bg-card border border-border rounded-xl p-6 mb-6 shadow-md">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M12 18v-6" /><path d="m9 15 3 3 3-3" /></svg>
+            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center shrink-0">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-accent"
+              >
+                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                <path d="M12 18v-6" />
+                <path d="m9 15 3 3 3-3" />
+              </svg>
             </div>
+
             <div className="flex-1">
-              <h2 className="text-base font-bold text-foreground mb-1">Plantilla de reporte NUEVA</h2>
+              <h2 className="text-base font-bold text-foreground mb-1">
+                Plantilla de reporte
+              </h2>
+
               <p className="text-sm text-muted-foreground mb-4">
-                Descarga la plantilla oficial NUEVA, llénala y vuelve a esta página para subir tu archivo.
+                Descarga la plantilla oficial, llénala y vuelve a esta página para subir tu archivo.
               </p>
+
               {templateAvailable ? (
                 <a
                   href="/api/template-word"
-                  className="inline-flex items-center gap-2 bg-blue-600 text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-                  Descargar plantilla NUEVA
+                  className="inline-flex items-center gap-2 bg-accent text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-accent/90 transition-colors shadow-sm"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+
+                  Descargar plantilla (Anexo 9)
                 </a>
               ) : (
                 <p className="text-sm text-muted-foreground italic">
-                  La plantilla aún no ha sido cargada por el administrador.
+                  La plantilla complementaria aún no ha sido cargada por el administrador.
                 </p>
               )}
             </div>
           </div>
-        </div> */}
+        </div>
 
         {/* Auth / Upload section */}
         {isOwner ? (
           <UploadArea
             projectId={project.id}
-            fileName={project.file_name ?? null}
-            uploadedAt={project.uploaded_at ?? null}
+            submissions={submissions.map((submission) => ({
+              id: Number(submission.id),
+              file_name: String(submission.file_name),
+              uploaded_at: new Date(submission.uploaded_at).toISOString(),
+            }))}
           />
         ) : (
           <div className="bg-card border border-border rounded-xl p-6 shadow-md">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-primary"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
               </div>
+
               <div className="flex-1">
-                <h2 className="text-base font-bold text-foreground mb-1">Subir reporte</h2>
+                <h2 className="text-base font-bold text-foreground mb-1">
+                  Subir reporte
+                </h2>
+
                 <p className="text-sm text-muted-foreground mb-4">
                   Inicia sesión con las credenciales asignadas a este proyecto para subir tu archivo.
                 </p>
+
                 <ProjectLoginForm projectId={project.id} />
               </div>
             </div>

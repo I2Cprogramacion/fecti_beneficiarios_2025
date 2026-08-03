@@ -3,30 +3,44 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
-interface UploadAreaProps {
-  projectId: number
-  fileName: string | null
-  uploadedAt: string | null
+interface Submission {
+  id: number
+  file_name: string
+  uploaded_at: string
 }
 
-export function UploadArea({ projectId, fileName, uploadedAt }: UploadAreaProps) {
+interface UploadAreaProps {
+  projectId: number
+  submissions: Submission[]
+}
+
+export function UploadArea({
+  projectId,
+  submissions = [],
+}: UploadAreaProps) {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const MAX_FILE_SIZE = 16 * 1024 * 1024
 
   async function handleFile(file: File) {
     setError('')
     setSuccess('')
+    if (file.size > MAX_FILE_SIZE) {
+      setError('El archivo no puede superar los 16 MB.')
+      return
+    }
+
     setUploading(true)
 
     const formData = new FormData()
     formData.append('file', file)
 
     const res = await fetch('/api/submit', { method: 'POST', body: formData })
-    
+
     let data
     try {
       data = await res.json()
@@ -57,7 +71,7 @@ export function UploadArea({ projectId, fileName, uploadedAt }: UploadAreaProps)
     setDeleting(true)
 
     const res = await fetch('/api/submit/delete', { method: 'DELETE' })
-    
+
     let data
     try {
       data = await res.json()
@@ -88,40 +102,43 @@ export function UploadArea({ projectId, fileName, uploadedAt }: UploadAreaProps)
     <div className="bg-card border border-border rounded-xl p-6 shadow-md">
       <h2 className="text-base font-bold text-foreground mb-1">Subir reporte</h2>
 
-      {/* Current status */}
-      <div
-        className={`flex items-center justify-between gap-3 text-xs rounded px-3 py-2 mb-4 ${
-          fileName
-            ? 'bg-green-50 text-green-700 border border-green-200'
-            : 'bg-amber-50 text-amber-700 border border-amber-200'
-        }`}
-      >
-        <div className="flex items-center gap-2 flex-1">
-          <span className={`w-2 h-2 rounded-full shrink-0 ${fileName ? 'bg-green-500' : 'bg-amber-400'}`} />
-          {fileName ? (
-            <span>
-              Archivo actual: <strong>{fileName}</strong>
-              {uploadedAt && (
-                <span className="ml-1 opacity-70">
-                  — {new Date(uploadedAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
-                </span>
-              )}
-            </span>
-          ) : (
-            <span>Sin archivo — pendiente de entrega</span>
-          )}
-        </div>
-        {fileName && (
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className="shrink-0 px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 font-semibold text-xs"
-          >
-            {deleting ? 'Eliminando...' : 'Eliminar'}
-          </button>
-        )}
-      </div>
+      {/* Lista de archivos subidos */}
+      {submissions.length > 0 ? (
+        <div className="space-y-2 mb-4">
+          <p className="text-sm font-semibold text-foreground">
+            Archivos subidos
+          </p>
 
+          {submissions.map((submission) => (
+            <div
+              key={submission.id}
+              className="flex items-center justify-between gap-3 text-xs rounded px-3 py-2 bg-green-50 text-green-700 border border-green-200"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2 h-2 rounded-full shrink-0 bg-green-500" />
+
+                <span className="truncate">
+                  <strong>{submission.file_name}</strong>
+
+                  <span className="ml-1 opacity-70">
+                    —{' '}
+                    {new Date(submission.uploaded_at).toLocaleDateString('es-MX', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </span>
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 text-xs rounded px-3 py-2 mb-4 bg-amber-50 text-amber-700 border border-amber-200">
+          <span className="w-2 h-2 rounded-full shrink-0 bg-amber-400" />
+          <span>Sin archivos — pendiente de entrega</span>
+        </div>
+      )}
       {/* Drop zone */}
       <div
         onDrop={handleDrop}
@@ -130,16 +147,18 @@ export function UploadArea({ projectId, fileName, uploadedAt }: UploadAreaProps)
         className="border-2 border-dashed border-border rounded-xl p-10 text-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-all group"
       >
         <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-accent/20 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
         </div>
         <p className="text-sm text-foreground font-medium">
-          {fileName ? 'Haz clic o arrastra para reemplazar el archivo' : 'Haz clic o arrastra tu archivo aquí'}
+          Haz clic o arrastra para agregar otro archivo
         </p>
-        <p className="text-xs text-muted-foreground mt-1">Formatos aceptados: .xls y .xlsx</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Formatos aceptados: Excel, PDF, Word e imágenes. Máximo 16 MB.
+        </p>
         <input
           ref={inputRef}
           type="file"
-          accept=".xls,.xlsx"
+          accept=".xls,.xlsx,.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
           className="hidden"
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             const file = e.target.files?.[0]
@@ -156,13 +175,13 @@ export function UploadArea({ projectId, fileName, uploadedAt }: UploadAreaProps)
       )}
       {error && (
         <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 rounded-lg px-4 py-3 mt-3">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
           {error}
         </div>
       )}
       {success && (
         <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3 mt-3">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="m9 11 3 3L22 4" /></svg>
           {success}
         </div>
       )}

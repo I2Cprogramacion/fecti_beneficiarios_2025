@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
         return new NextResponse(result.stream, {
             headers: {
                 'Content-Type':
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 'Content-Disposition': `attachment; filename="${filename}"`,
                 ETag: result.blob.etag,
                 'Cache-Control': 'private, no-cache',

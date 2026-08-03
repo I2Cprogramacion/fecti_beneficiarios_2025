@@ -234,7 +234,7 @@ export function AdminDashboard({
             <input
               ref={templateRef}
               type="file"
-              accept=".xls,.xlsx"
+              accept=".xls,.xlsx,.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
               className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleTemplateUpload(f) }}
             />
