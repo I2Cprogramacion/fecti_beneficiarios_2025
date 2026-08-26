@@ -158,7 +158,7 @@ export function UploadArea({
         <input
           ref={inputRef}
           type="file"
-          accept=".xls,.xlsx,.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+          accept=".xls,.xlsx,.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.xml"
           className="hidden"
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             const file = e.target.files?.[0]

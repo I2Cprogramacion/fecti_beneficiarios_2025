@@ -39,6 +39,7 @@ const ext = file.name.split('.').pop()?.toLowerCase()
     'jpg',
     'jpeg',
     'png',
+    'xml'
   ].includes(ext ?? '')) {
     return NextResponse.json({ error: 'Solo se permiten archivos Excel, PDF, Word o imágenes JPG y PNG.' }, { status: 400 })
   }
